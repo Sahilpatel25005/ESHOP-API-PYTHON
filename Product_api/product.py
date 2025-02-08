@@ -94,9 +94,6 @@ def list_product():
                 row_dict[col_name] = row[index]  # Assign values to the dictionary
             result.append(row_dict)  # Add the dictionary to the result list
         return result
-    
-    
-    
     except Exception as e:
         logging.error(f"Error fetching data: {e}")
         return {"error": "Failed to fetch videos"}
