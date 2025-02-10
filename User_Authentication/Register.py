@@ -1,13 +1,17 @@
-from fastapi import FastAPI, Request
-from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Request,Depends, HTTPException
 import logging
 import psycopg2
 import psycopg2.extras
+from pydantic import BaseModel , EmailStr
+from passlib.context import CryptContext
 
 
 
-# Configure logging
+
+app = FastAPI()
+
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -16,36 +20,17 @@ logging.basicConfig(
     ],
 )
 
-app1 = FastAPI()
-
 # CORS Middleware
-app1.add_middleware(
+app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allows all origins. Change to specific domains in production!
     allow_credentials=True,
     allow_methods=["*"],  # Allows all HTTP methods (GET, POST, PUT, DELETE, etc.)
     allow_headers=["*"],  # Allows all headers
 )
-
-# fileName = 'fast_api.json'
-
-# Define Pydantic Models
-class Add_Product(BaseModel):
-    productid : int
-    name : str
-    discription : str
-    price : float
-    image : str
-    categoryid : int
     
-
-
-
-# Helper Functions
-
-
 # Middleware for logging requests
-@app1.middleware("http")
+@app.middleware("http")
 async def log_requests(request: Request, call_next):
     logging.info(f"Incoming {request.method} request: {request.url}")
     if request.method in ['POST', 'PUT', 'DELETE']:
@@ -55,7 +40,15 @@ async def log_requests(request: Request, call_next):
     logging.info(f"Response status code: {response.status_code}")
     return response 
 
-
+class register(BaseModel):
+    fname : str
+    lname :str
+    email : EmailStr
+    password : str
+    monumber : int
+    password : str
+    address : str
+    
 DB_CONFIG = {
     "host": "localhost",
     "dbname": "ESHOP",
@@ -63,43 +56,43 @@ DB_CONFIG = {
     "password": "password",
     "port": 5432,
 }
-
-# Utility function to connect to the database
+    
 def get_db_connection():
     return psycopg2.connect(
-        host=DB_CONFIG["host"],
+        host = DB_CONFIG["host"],
         dbname=DB_CONFIG["dbname"],
         user=DB_CONFIG["user"],
         password=DB_CONFIG["password"],
         port=DB_CONFIG["port"],
         cursor_factory=psycopg2.extras.DictCursor,
     )
+    
 
-# API Endpoints
-@app1.get('/list_product')
-def list_product():
+
+pwd_context = CryptContext(schemes=['bcrypt'], deprecated = "auto")
+
+
+@app.post("/register")
+def register_user(user : register):
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        logging.info("Fetching all video data.")
-        query = "SELECT p.productid, p.name, p.description, p.price, p.image, p.categoryid, c.name AS categoryname FROM public.product p JOIN public.category c ON p.categoryid = c.categoryid order by image "
-        cur.execute(query)
-        col_names = [desc[0] for desc in cur.description]  # Get column names
-        rows = cur.fetchall()
-        # print(rows)
-        result = []  # Initialize an empty list
-        for row in rows:
-            row_dict = {}  # Create an empty dictionary for each row
-            for index, col_name in enumerate(col_names):
-                row_dict[col_name] = row[index]  # Assign values to the dictionary
-            result.append(row_dict)  # Add the dictionary to the result list
-        return result
+        exist_user_query = ("select email from users where email = %s")
+        cur.execute(exist_user_query , (user.email,))
+        exist_user = cur.fetchone()
+        if exist_user:
+            return {"error" : "Email is already reagister."}
+        else:
+            hased_password = pwd_context.hash(user.password)
+            query = ("insert into users (fname, lname, email, monumber, password, address) values(%s , %s , %s , %s ,%s , %s)")
+            value = (user.fname , user.lname , user.email , user.monumber , hased_password , user.address,)
+            cur.execute(query , value)
+        return {"massage" : "User Register Successfully"} 
+
     except Exception as e:
-        logging.error(f"Error fetching data: {e}")
-        return {"error": "Failed to fetch videos"}
+        logging.error(f"Error user login: {e}")
+        return {"error": "Invalid Email or Password!!"}
     finally:
         cur.close()
         conn.close()
-    
         
-

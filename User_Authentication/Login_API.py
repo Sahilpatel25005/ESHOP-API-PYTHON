@@ -8,7 +8,10 @@ from datetime import datetime, timezone , timedelta
 import logging
 import psycopg2
 import psycopg2.extras
+from typing import Annotated
  
+app = FastAPI()
+
 
 
 # Configure logging
@@ -20,8 +23,6 @@ logging.basicConfig(
     ],
 )
 
-app = FastAPI()
-
 # CORS Middleware
 app.add_middleware(
     CORSMiddleware,
@@ -30,13 +31,6 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all HTTP methods (GET, POST, PUT, DELETE, etc.)
     allow_headers=["*"],  # Allows all headers
 )
-
-# fileName = 'fast_api.json'
-
-# Define Pydantic Models
-class login(BaseModel):
-    email : EmailStr
-    password : str
     
 # Middleware for logging requests
 @app.middleware("http")
@@ -49,6 +43,12 @@ async def log_requests(request: Request, call_next):
     logging.info(f"Response status code: {response.status_code}")
     return response 
 
+
+
+# Define Pydantic Models
+class login(BaseModel):
+    email : EmailStr
+    password : str
 
 DB_CONFIG = {
     "host": "localhost",
@@ -101,7 +101,7 @@ def create_token(data:dict):
 
 
 @app.post('/login')
-def login(login : login):
+def login_User(login : login):
     try:
         conn = get_db_connection()
         cur = conn.cursor()
@@ -115,12 +115,43 @@ def login(login : login):
     finally:
         cur.close()
         conn.close()
+        
+        
+async def get_current_active_user(
+    current_user: Annotated[login , Depends(login_user)],
+):
+    if current_user is None:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return current_user
 
-# def protected_route(token: str = Depends(oauth2_scheme)):
-#     try:
-#         payload = jwt.decode(token, secret_key, algorithms=[algoritham])
-#         return {"message": "You are authenticated!", "user": payload["sub"]}
-#     except jwt.ExpiredSignatureError:
-#         raise HTTPException(status_code=401, detail="Token expired")
-#     except jwt.InvalidTokenError:
-#         raise HTTPException(status_code=401, detail="Invalid token")
+@app.get("/users/me")
+async def read_users_me(current_user: Annotated[login, Depends(get_current_active_user)],):
+    return current_user
+
+def protected_route(token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, secret_key, algorithms=[algoritham])
+        return {"message": "You are authenticated!", "user": payload["sub"]}
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    except Exception as e:
+        logging.error(f"Error in protected route: {e}")
+        raise HTTPException(status_code=401, detail="Invalid token")
+        
+
+@app.get("/protected")
+async def protected_route(request : Request):
+    try:
+        token = request.headers.get("Authorization")
+        payload =  protected_route(token)
+        return payload
+    except jwt.ExpiredSignatureError:
+        return "Token expired"
+    except jwt.InvalidTokenError:
+        return "Token invalid"
+    except Exception as e:
+        logging.error(f"Error in protected route: {e}")
+        return "Token 1111"
+    
