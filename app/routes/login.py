@@ -1,9 +1,9 @@
 from fastapi import FastAPI,Depends, HTTPException,APIRouter
-from pydantic import BaseModel, EmailStr
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from app.database import get_db_connection
+from app.models import LoginModel
 import jwt
 from datetime import datetime, timezone, timedelta
 import logging
@@ -26,13 +26,6 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all HTTP methods (GET, POST, PUT, DELETE, etc.)
     allow_headers=["*"],  # Allows all headers
 )
-
-# Define Pydantic Models
-class LoginModel(BaseModel):
-    email: EmailStr
-    password: str
-
-
 # JWT Config
 SECRET_KEY = "b182763754ef087a53ff3bd4b9f66996b4a5f34748a3f0ad63f397ebed2e1478"
 ALGORITHM = "HS256"

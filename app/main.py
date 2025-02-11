@@ -7,7 +7,7 @@ app = FastAPI(title="eShop API")
 # Include Routers
 app.include_router(login.login_router)
 app.include_router(login.protected_router)
-app.include_router(product.router)
+app.include_router(product.product)
 app.include_router(register.router)
 
 if __name__ == "__main__":
