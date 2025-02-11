@@ -1,9 +1,8 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request,APIRouter
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from app.database import get_db_connection
 import logging
-import psycopg2
-import psycopg2.extras
 
 
 
@@ -16,18 +15,16 @@ logging.basicConfig(
     ],
 )
 
-app1 = FastAPI()
+app = FastAPI()
 
 # CORS Middleware
-app1.add_middleware(
+app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allows all origins. Change to specific domains in production!
     allow_credentials=True,
     allow_methods=["*"],  # Allows all HTTP methods (GET, POST, PUT, DELETE, etc.)
     allow_headers=["*"],  # Allows all headers
 )
-
-# fileName = 'fast_api.json'
 
 # Define Pydantic Models
 class Add_Product(BaseModel):
@@ -37,15 +34,9 @@ class Add_Product(BaseModel):
     price : float
     image : str
     categoryid : int
-    
-
-
-
-# Helper Functions
-
 
 # Middleware for logging requests
-@app1.middleware("http")
+@app.middleware("http")
 async def log_requests(request: Request, call_next):
     logging.info(f"Incoming {request.method} request: {request.url}")
     if request.method in ['POST', 'PUT', 'DELETE']:
@@ -56,32 +47,15 @@ async def log_requests(request: Request, call_next):
     return response 
 
 
-DB_CONFIG = {
-    "host": "localhost",
-    "dbname": "ESHOP",
-    "user": "postgres",
-    "password": "password",
-    "port": 5432,
-}
-
-# Utility function to connect to the database
-def get_db_connection():
-    return psycopg2.connect(
-        host=DB_CONFIG["host"],
-        dbname=DB_CONFIG["dbname"],
-        user=DB_CONFIG["user"],
-        password=DB_CONFIG["password"],
-        port=DB_CONFIG["port"],
-        cursor_factory=psycopg2.extras.DictCursor,
-    )
+router = APIRouter( prefix="/list_product" , tags=['product'])
 
 # API Endpoints
-@app1.get('/list_product')
+@router.get('')
 def list_product():
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        logging.info("Fetching all video data.")
+        logging.info("Fetching all product data.")
         query = "SELECT p.productid, p.name, p.description, p.price, p.image, p.categoryid, c.name AS categoryname FROM public.product p JOIN public.category c ON p.categoryid = c.categoryid order by image "
         cur.execute(query)
         col_names = [desc[0] for desc in cur.description]  # Get column names

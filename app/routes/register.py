@@ -1,16 +1,11 @@
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, Request,Depends, HTTPException
+from fastapi import FastAPI, Request,Depends, HTTPException,APIRouter
+from app.database import get_db_connection
 import logging
-import psycopg2
-import psycopg2.extras
 from pydantic import BaseModel , EmailStr
 from passlib.context import CryptContext
 
-
-
-
 app = FastAPI()
-
 
 logging.basicConfig(
     level=logging.INFO,
@@ -49,30 +44,11 @@ class register(BaseModel):
     password : str
     address : str
     
-DB_CONFIG = {
-    "host": "localhost",
-    "dbname": "ESHOP",
-    "user": "postgres",
-    "password": "password",
-    "port": 5432,
-}
-    
-def get_db_connection():
-    return psycopg2.connect(
-        host = DB_CONFIG["host"],
-        dbname=DB_CONFIG["dbname"],
-        user=DB_CONFIG["user"],
-        password=DB_CONFIG["password"],
-        port=DB_CONFIG["port"],
-        cursor_factory=psycopg2.extras.DictCursor,
-    )
-    
-
-
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated = "auto")
 
+router = APIRouter( prefix="/register" , tags=['register'])
 
-@app.post("/register")
+@router.post('')
 def register_user(user : register):
     try:
         conn = get_db_connection()
@@ -87,7 +63,8 @@ def register_user(user : register):
             query = ("insert into users (fname, lname, email, monumber, password, address) values(%s , %s , %s , %s ,%s , %s)")
             value = (user.fname , user.lname , user.email , user.monumber , hased_password , user.address,)
             cur.execute(query , value)
-        return {"massage" : "User Register Successfully"} 
+            conn.commit()
+            return {"massage" : "User Register Successfully"} 
 
     except Exception as e:
         logging.error(f"Error user login: {e}")
