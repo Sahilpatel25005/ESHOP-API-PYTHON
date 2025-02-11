@@ -1,8 +1,8 @@
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, Request,Depends, HTTPException,APIRouter
+from fastapi import FastAPI, Request,Depends, APIRouter
 from app.database import get_db_connection
+from app.models import register
 import logging
-from pydantic import BaseModel , EmailStr
 from passlib.context import CryptContext
 
 app = FastAPI()
@@ -35,15 +35,7 @@ async def log_requests(request: Request, call_next):
     logging.info(f"Response status code: {response.status_code}")
     return response 
 
-class register(BaseModel):
-    fname : str
-    lname :str
-    email : EmailStr
-    password : str
-    monumber : int
-    password : str
-    address : str
-    
+
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated = "auto")
 
 router = APIRouter( prefix="/register" , tags=['register'])
@@ -68,7 +60,7 @@ def register_user(user : register):
 
     except Exception as e:
         logging.error(f"Error user login: {e}")
-        return {"error": "Invalid Email or Password!!"}
+        return {"error": "Failed to register user"}
     finally:
         cur.close()
         conn.close()
