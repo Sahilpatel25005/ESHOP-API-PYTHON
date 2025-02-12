@@ -1,37 +1,17 @@
-from fastapi import FastAPI,Depends, HTTPException,APIRouter
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import HTTPException,APIRouter
 from passlib.context import CryptContext
 from app.database import get_db_connection
 from app.models import LoginModel
 import jwt
 from datetime import datetime, timezone, timedelta
-import logging
 
 
-app = FastAPI()
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[logging.StreamHandler()],
-)
-
-# CORS Middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins. Change to specific domains in production!
-    allow_credentials=True,
-    allow_methods=["*"],  # Allows all HTTP methods (GET, POST, PUT, DELETE, etc.)
-    allow_headers=["*"],  # Allows all headers
-)
 # JWT Config
 SECRET_KEY = "b182763754ef087a53ff3bd4b9f66996b4a5f34748a3f0ad63f397ebed2e1478"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated="auto")
 
@@ -66,23 +46,15 @@ login_router = APIRouter(prefix="/login", tags=['login'])
 @login_router.post('')
 def login_user(login: LoginModel):
     user = authenticate_user(login.email, login.password)
-    token = create_access_token({'sub': user['email']})
+    token = create_access_token({'sub': user['email'] , 'userid' : user['userid']})
     return {"access_token": token, "token_type": "bearer"}
 
-# Verify JWT Token
-def verify_token(token: str):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
 
-# Protected API
-protected_router = APIRouter(prefix="/protected", tags=['protected'])
+# protected2_router = APIRouter(prefix="/protected2", tags=['protected'])
 
-@protected_router.get('')
-async def protected_route(token: str = Depends(oauth2_scheme)):
-    payload = verify_token(token)
-    return {"message": "You are authenticated!", "user": payload}
+
+# @protected2_router.post('')
+# async def protected_route(login : LoginModel , token: str = Depends(oauth2_scheme)):
+#     payload = verify_token(token)
+#     return {"message": "You are authenticated!", "user": payload}
+

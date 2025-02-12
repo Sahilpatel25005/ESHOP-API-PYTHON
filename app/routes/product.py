@@ -1,48 +1,16 @@
-from fastapi import FastAPI, Request,APIRouter
-from pydantic import BaseModel
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import APIRouter , Depends
 from app.database import get_db_connection
-from app.models import product_name
 import logging
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.StreamHandler()
-    ],
-)
-
-app = FastAPI()
-
-# CORS Middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Allows all origins. Change to specific domains in production!
-    allow_credentials=True,
-    allow_methods=["*"],  # Allows all HTTP methods (GET, POST, PUT, DELETE, etc.)
-    allow_headers=["*"],  # Allows all headers
-)
-
-# Middleware for logging requests
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    logging.info(f"Incoming {request.method} request: {request.url}")
-    if request.method in ['POST', 'PUT', 'DELETE']:
-        body = await request.body()
-        logging.info(f"Request body: {body.decode('utf-8')}")
-    response = await call_next(request)
-    logging.info(f"Response status code: {response.status_code}")
-    return response 
+from app.verify_token import verify_token , oauth2_scheme
 
 
 product = APIRouter( prefix="/list_product" , tags=['product'])
 
 # API Endpoints
 @product.get('')
-def list_product():
+def list_product(token: str = Depends(oauth2_scheme)):
     try:
+        verify_token(token)
         conn = get_db_connection()
         cur = conn.cursor()
         logging.info("Fetching all product data.")
