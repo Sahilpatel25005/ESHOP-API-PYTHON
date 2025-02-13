@@ -21,10 +21,10 @@ class LoginModel(BaseModel):
         return value
 
 # Example usage:
-try:
-    user = LoginModel(email="test@example.com", password="WeakPass")
-except ValidationError as e:
-    print(e)  # This will show validation errors
+# try:
+#     user = LoginModel(email="test@example.com", password="WeakPass")
+# except ValidationError as e:
+#     print(e)  # This will show validation errors
 
 
 
@@ -53,18 +53,21 @@ class register(BaseModel):
         return value
 
 # Example usage:
-try:
-    user = register(email="test@example.com", password="WeakPass")
-except ValidationError as e:
-    print(e)  # Th
+# try:
+#     user = register(email="test@example.com", password="WeakPass")
+# except ValidationError as e:
+#     print(e)  # Th
     
 class cart(BaseModel):
     productid : int
     qty: int
+    price : int
     
     
 class product_name(BaseModel):
     name : str
+    
+
     
     
     

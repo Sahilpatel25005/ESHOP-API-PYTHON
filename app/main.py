@@ -1,10 +1,8 @@
 from fastapi import FastAPI , Request
 import logging
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import login, product, register , cart
+from app.routes import login, product, register , cart , order
 import uvicorn
-
-from app import verify_token
 
 app = FastAPI(title="eShop API")
 
@@ -39,6 +37,7 @@ async def log_requests(request: Request, call_next):
 app.include_router(login.login_router)
 app.include_router(cart.add_cart_router)
 app.include_router(product.product)
+app.include_router(order.order_router)
 app.include_router(register.router)
 
 if __name__ == "__main__":
