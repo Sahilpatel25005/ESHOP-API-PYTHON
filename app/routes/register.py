@@ -1,6 +1,6 @@
 from fastapi import  APIRouter
 from app.database import get_db_connection
-from app.models import register
+from app.models.register import register 
 from passlib.context import CryptContext
 import logging
 

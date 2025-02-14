@@ -36,6 +36,9 @@ async def log_requests(request: Request, call_next):
 # Include Routers
 app.include_router(login.login_router)
 app.include_router(cart.add_cart_router)
+app.include_router(cart.increse_qty_router)
+app.include_router(cart.decrese_qty_router)
+app.include_router(cart.delete_item_router)
 app.include_router(product.product)
 app.include_router(order.order_router)
 app.include_router(register.router)
