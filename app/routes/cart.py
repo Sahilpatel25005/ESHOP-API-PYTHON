@@ -24,11 +24,11 @@ def add_to_cart(cart : cart , token: str = Depends(oauth2_scheme)):
         # create cart
         query = ("""
                 WITH cart AS (
-                    SELECT cartid FROM cart WHERE userid = 27 
+                    SELECT cartid FROM cart WHERE userid = %s
                 ), 
                 insertcart AS (
                     INSERT INTO cart (userid)
-                    SELECT 27
+                    SELECT %s
                     WHERE NOT EXISTS (SELECT 1 FROM cart)
                     RETURNING cartid
                 )
@@ -36,8 +36,8 @@ def add_to_cart(cart : cart , token: str = Depends(oauth2_scheme)):
                 UNION ALL
                 SELECT * FROM insertcart; 
                 """)
-                        
-        cur.execute(query, (userid, cart.productid , userid))
+           
+        cur.execute(query, (userid, userid))
         cartid_result = cur.fetchone()
         if not cartid_result:
             raise HTTPException(status_code=500, detail="Failed to create cart")

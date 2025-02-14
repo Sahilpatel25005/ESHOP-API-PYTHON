@@ -13,6 +13,8 @@ def oredr_item(token: str = Depends(oauth2_scheme)):
         conn = get_db_connection()
         cur = conn.cursor()
         
+        # ****************** fetch cartid ******************
+        
         cart_q = ("select cartid from cart where userid = %s")
         cur.execute(cart_q , (userid,))
         cart_row = cur.fetchone()
@@ -27,23 +29,24 @@ def oredr_item(token: str = Depends(oauth2_scheme)):
         else:
             return {"error" : "Cart is empty"}
         
-        cart_item_q = ("select * from cartitem where cartid = %s ")
-        cur.execute(cart_item_q , (cartid,))
-        cart_item = cur.fetchall()
-        
         if not orderid:
             raise HTTPException(status_code=404, detail="Order not found")
         
-        # insert order intem
-        for item in cart_item:
-            productid = item[2]
-            qty = item[3]
-            price = item[4]
-            order_item_q = ("INSERT INTO orderitem(orderid, productid, qty, price )VALUES (%s ,%s , %s , %s)")
-            order_item_v = (orderid , productid , qty , price)
-            cur.execute(order_item_q , order_item_v)
+        # ****************** select item from cartitem and insert into orderitem ******************
+        
+        insert_orderI = ("""   
+                            INSERT INTO orderitem (orderid, productid, qty, price)
+                            SELECT %s, a.productid, a.qty, b.price
+                            FROM cartitem a
+                            join product b
+                            on a.productid = a.productid
+                            WHERE cartid = %s ;
+                        """)
+        insert_orderV = ( orderid , cartid )
+        cur.execute(insert_orderI , insert_orderV)
         conn.commit()
-        # update order in amount
+        
+        # *****************  update order in amount ******************
         update_order_q = ("""UPDATE orders 
                             SET amount = (
                             SELECT SUM(qty * price) 

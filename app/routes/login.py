@@ -1,7 +1,7 @@
 from fastapi import HTTPException,APIRouter
 from passlib.context import CryptContext
 from app.database import get_db_connection
-from app.models import LoginModel
+from app.models.login_model import LoginModel
 import jwt
 from datetime import datetime, timezone, timedelta
 
@@ -49,12 +49,4 @@ def login_user(login: LoginModel):
     token = create_access_token({'sub': user['email'] , 'userid' : user['userid']})
     return {"access_token": token, "token_type": "bearer"}
 
-
-# protected2_router = APIRouter(prefix="/protected2", tags=['protected'])
-
-
-# @protected2_router.post('')
-# async def protected_route(login : LoginModel , token: str = Depends(oauth2_scheme)):
-#     payload = verify_token(token)
-#     return {"message": "You are authenticated!", "user": payload}
 
