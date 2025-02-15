@@ -1,13 +1,9 @@
 import psycopg2
 import psycopg2.extras
+import json
 
-DB_CONFIG = {
-    "host": "localhost",
-    "dbname": "ESHOP",
-    "user": "postgres",
-    "password": "password",
-    "port": 5432,
-}
+with open("DB.json", "r") as json_file:
+    DB_CONFIG = json.load(json_file)
 
 # Utility function to connect to the database
 def get_db_connection():

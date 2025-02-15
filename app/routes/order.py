@@ -1,15 +1,14 @@
 from app.database import get_db_connection
 from fastapi import APIRouter, HTTPException , Depends
 import logging
-from app.verify_token import verify_token , oauth2_scheme
+from app.verify_token import current_user 
 
 order_router = APIRouter(prefix="/order" , tags=['order'])
 
 @order_router.post('')
-def oredr_item(token: str = Depends(oauth2_scheme)):
+def oredr_item(payload: str = Depends(current_user)):
     try:
-        paylod = verify_token(token)
-        userid = paylod['userid']
+        userid = payload['userid']
         conn = get_db_connection()
         cur = conn.cursor()
         
@@ -39,7 +38,7 @@ def oredr_item(token: str = Depends(oauth2_scheme)):
                             SELECT %s, a.productid, a.qty, b.price
                             FROM cartitem a
                             join product b
-                            on a.productid = a.productid
+                            on a.productid = b.productid
                             WHERE cartid = %s ;
                         """)
         insert_orderV = ( orderid , cartid )
@@ -47,7 +46,8 @@ def oredr_item(token: str = Depends(oauth2_scheme)):
         conn.commit()
         
         # *****************  update order in amount ******************
-        update_order_q = ("""UPDATE orders 
+        update_order_q = ("""
+                          UPDATE orders 
                             SET amount = (
                             SELECT SUM(qty * price) 
                             FROM orderitem 
@@ -56,6 +56,11 @@ def oredr_item(token: str = Depends(oauth2_scheme)):
                             WHERE orderid = %s""")
         cur.execute(update_order_q, (orderid,))
         conn.commit()
+        
+        clear_cart_q = ("delete from cart where cartid = %s")
+        cur.execute(clear_cart_q, (cartid,))
+        conn.commit()
+        
         return {"message" : "Order placed successfully and Amount is updated"}
     
     except Exception as e:

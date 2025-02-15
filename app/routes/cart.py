@@ -2,16 +2,16 @@ from app.database import get_db_connection
 from app.models.cart_model import cart
 from fastapi import APIRouter, HTTPException , Depends
 import logging
-from app.verify_token import verify_token , oauth2_scheme
+from app.verify_token import current_user 
+
 
 
 add_cart_router = APIRouter(prefix= "/cart/add" , tags = ['cart/add'])
 
 @add_cart_router.post('')
-def add_to_cart(cart : cart , token: str = Depends(oauth2_scheme)):   
+def add_to_cart(cart : cart , payload: str = Depends(current_user)):   
     try:
-        paylod = verify_token(token)
-        userid = paylod['userid']
+        userid = payload['userid']
         conn = get_db_connection()
         cur = conn.cursor()
         query =  ("SELECT * FROM product WHERE productid = %s LIMIT 1;")
@@ -86,9 +86,9 @@ def add_to_cart(cart : cart , token: str = Depends(oauth2_scheme)):
 increse_qty_router = APIRouter(prefix= "/cart/increse" , tags = ['cart/increse'])
 
 @increse_qty_router.post('')
-def add_to_cart(productid : int , token: str = Depends(oauth2_scheme)):   
+def increse(cart : cart , payload: str = Depends(current_user)):   
     try:
-        payload = verify_token(token)
+
         userid = payload['userid']
         conn = get_db_connection()
         cur = conn.cursor()
@@ -105,7 +105,7 @@ def add_to_cart(productid : int , token: str = Depends(oauth2_scheme)):
 
         logging.info("Checking if product exists in cart.")
         check_query = "SELECT * FROM cartitem WHERE cartid = %s AND productid = %s"
-        cur.execute(check_query, (cartid, productid))
+        cur.execute(check_query, (cartid, cart.productid))
         row = cur.fetchone()
 
         # If the product is not in the cart, raise an error
@@ -148,9 +148,8 @@ def add_to_cart(productid : int , token: str = Depends(oauth2_scheme)):
 decrese_qty_router = APIRouter(prefix= "/cart/decrese" , tags = ['cart/decrese'])
 
 @decrese_qty_router.post('')
-def add_to_cart(cart : cart , token: str = Depends(oauth2_scheme)):   
+def decrese(cart : cart , payload: str = Depends(current_user)):   
     try:
-        payload = verify_token(token)
         userid = payload['userid']
         conn = get_db_connection()
         cur = conn.cursor()
@@ -174,7 +173,7 @@ def add_to_cart(cart : cart , token: str = Depends(oauth2_scheme)):
         if not row:
             raise HTTPException(status_code=404, detail="Product not found in cart")
 
-        # Increase the quantity by 1
+        # decrease the quantity by 1
         logging.info("Decreasing the quantity of the product in the cart.")
         update_query = ("""
         UPDATE cartitem
@@ -211,10 +210,9 @@ def add_to_cart(cart : cart , token: str = Depends(oauth2_scheme)):
         
 delete_item_router = APIRouter(prefix= "/cart/delete" , tags = ['cart/delete'])
 
-@delete_item_router.post('')
-def add_to_cart(cart : cart , token: str = Depends(oauth2_scheme)):   
+@delete_item_router.delete('')
+def delete(cart : cart , payload: str = Depends(current_user)):   
     try:
-        payload = verify_token(token)
         userid = payload['userid']
         conn = get_db_connection()
         cur = conn.cursor()
@@ -241,7 +239,7 @@ def add_to_cart(cart : cart , token: str = Depends(oauth2_scheme)):
             # raise HTTPException(status_code=404, detail="Product not found in cart")
             
 
-        # Increase the quantity by 1
+        # delete item
         logging.info("Deleting the product in the cart.")
         delete_query = ("""
         delete from cartitem
@@ -257,6 +255,57 @@ def add_to_cart(cart : cart , token: str = Depends(oauth2_scheme)):
     except Exception as e:
         logging.error(f"Error delete item: {e}")
         return {"error": "Failed to delete item"}
+    finally:
+        cur.close()
+        conn.close()
+        
+        
+        
+#******************************************* show cart item *******************************************#
+        
+        
+        
+        
+show_cart_item = APIRouter(prefix= "/cart/cart_item" , tags = ['cart/cart_item'])
+
+@show_cart_item.get('')
+def item(payload: dict = Depends(current_user)):   
+    try:
+        userid = payload['userid']
+        logging.info(f"Fetching cart items for user ID: {userid}")
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        logging.info("Fetching cart ID for user.")
+        q = "SELECT cartid FROM cart WHERE userid = %s"
+        cur.execute(q, (userid,))
+        result = cur.fetchone()
+        
+        if not result:
+            return {"massage" : " Cart is empty!!"}
+        cartid = result[0]
+
+        logging.info("Checking if product exists in cart.")
+        check_query = ("SELECT c.* , p.name FROM cartitem as c join product as p on c.productid = p.productid where cartid = %s ")
+        cur.execute(check_query, (cartid,))
+        row = cur.fetchall()
+        result = []
+        for item in row:
+            result.append({"cartitemid" : item[0] , "cartid" : item[1] , "productid" : item[2] , "qty" : item[3] , "name" : item[4]  })
+            
+        # If the product is not in the cart, raise an error
+        if not row:
+            return {"error": "Cart is not found"}
+            # raise HTTPException(status_code=404, detail="Product not found in cart")
+            
+        return {
+          "massage" : "Cart item is get successfully.",
+          "cartitem" : result
+        }
+            
+    except Exception as e:
+        logging.error(f"Error get item: {e}")
+        return {"error": "Failed to fetch item"}
     finally:
         cur.close()
         conn.close()

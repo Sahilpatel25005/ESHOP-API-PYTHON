@@ -1,16 +1,16 @@
 from fastapi import APIRouter , Depends
 from app.database import get_db_connection
 import logging
-from app.verify_token import verify_token , oauth2_scheme
+from app.verify_token import current_user 
+
 
 
 product = APIRouter( prefix="/list_product" , tags=['product'])
 
 # API Endpoints
 @product.get('')
-def list_product(token: str = Depends(oauth2_scheme)):
+def list_product(payload: str = Depends(current_user)):
     try:
-        verify_token(token)
         conn = get_db_connection()
         cur = conn.cursor()
         logging.info("Fetching all product data.")

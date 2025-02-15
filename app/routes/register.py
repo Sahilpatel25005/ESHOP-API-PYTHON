@@ -5,7 +5,6 @@ from passlib.context import CryptContext
 import logging
 
 
-
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated = "auto")
 
 router = APIRouter( prefix="/register" , tags=['register'])
