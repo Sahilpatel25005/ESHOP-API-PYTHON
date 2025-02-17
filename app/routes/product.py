@@ -26,8 +26,8 @@ def list_product(payload: str = Depends(current_user)):
             result.append(row_dict)  # Add the dictionary to the result list
         return result
     except Exception as e:
-        logging.error(f"Error fetching data: {e}")
-        return {"error": "Failed to fetch videos"}
+        logging.error(f"Error fetching product: {e}")
+        return {"error": "Failed to fetch product"}
     finally:
         cur.close()
         conn.close()
