@@ -19,14 +19,14 @@ def oredr_item(payload: str = Depends(current_user)):
         cart_row = cur.fetchone()
         cartid = cart_row[0]
         
-        if cartid:
+        if cartid == None:
+            return {"error" : "Cart is empty"}
+        else:
             order_q = ("INSERT INTO orders(userid, status, amount)VALUES (%s , %s ,%s) returning orderid")
             order_v = (userid , "Pending" ,0)
             cur.execute(order_q , order_v)
             orderid = cur.fetchone()[0]
             conn.commit()
-        else:
-            return {"error" : "Cart is empty"}
         
         if not orderid:
             raise HTTPException(status_code=404, detail="Order not found")
@@ -61,7 +61,19 @@ def oredr_item(payload: str = Depends(current_user)):
         cur.execute(clear_cart_q, (cartid,))
         conn.commit()
         
-        return {"message" : "Order placed successfully and Amount is updated"}
+        # return cuurent order 
+        
+        query = "SELECT * from orderitem where orderid = %s "
+        cur.execute(query , (orderid,))
+        rows = cur.fetchall()
+        result = []
+        for item in rows:
+            result.append({"cartitemid" : item[0] , "cartid" : item[1] , "productid" : item[2] , "qty" : item[3]})
+            
+        
+        return {"message" : "Order placed successfully and Amount is updated",
+                "current_order" : result
+                }
     
     except Exception as e:
         logging.error(f"Error place order: {e}")
@@ -69,4 +81,78 @@ def oredr_item(payload: str = Depends(current_user)):
     finally:
         cur.close()
         conn.close()
+        
+
+# ********************* get all order of this user fro order history **************************
+
+all_orders = APIRouter( prefix="/order/all_orders" , tags=['/order/all_orders'])
+
+# API Endpoints
+@all_orders.get('')
+def product(payload: str = Depends(current_user)):
+    try:
+        userid = payload['userid']
+        conn = get_db_connection()
+        cur = conn.cursor()
+        logging.info("Fetching all product data.")
+        query = "SELECT * from orders where userid = %s "
+        cur.execute(query , (userid,))
+        rows = cur.fetchall()
+        result = []
+        for item in rows:
+            result.append({"orderid" : item[0] , "userid" : item[1] , "orderdate" : item[2] , "status" : item[3] , "amount" : item[4]  })
+            
+        # If the order is not i, raise an error
+        if not rows:
+            return {"error": "order is not found"}
+            # raise HTTPException(status_code=404, detail="order not found")
+            
+        return {
+          "massage" : "order is get successfully.",
+          "cartitem" : result
+        }
+        
+    except Exception as e:
+        logging.error(f"Error fetching order: {e}")
+        return {"error": "Failed to get order"}
+    finally:
+        cur.close()
+        conn.close()
+        
+        
+# product = APIRouter( prefix="/order/get_order" , tags=['/order/get_order'])
+
+# # API Endpoints
+# @product.get('')
+# def product(payload: str = Depends(current_user)):
+#     try:
+#         userid = payload['userid']
+#         conn = get_db_connection()
+#         cur = conn.cursor()
+#         logging.info("Fetching all product data.")
+#         query = "SELECT * from orderitem where userid = %s "
+#         cur.execute(query , (userid,))
+#         rows = cur.fetchall()
+#         result = []
+#         for item in rows:
+#             result.append({"cartitemid" : item[0] , "cartid" : item[1] , "productid" : item[2] , "qty" : item[3] , "name" : item[4]  })
+            
+#         # If the product is not in the cart, raise an error
+#         if not rows:
+#             return {"error": "Cart is not found"}
+#             # raise HTTPException(status_code=404, detail="Product not found in cart")
+            
+#         return {
+#           "massage" : "Cart item is get successfully.",
+#           "cartitem" : result
+#         }
+        
+#     except Exception as e:
+#         logging.error(f"Error fetching data: {e}")
+#         return {"error": "Failed to fetch videos"}
+#     finally:
+#         cur.close()
+#         conn.close()
+        
+        
     

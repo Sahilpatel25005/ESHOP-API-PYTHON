@@ -42,6 +42,7 @@ app.include_router(cart.delete_item_router)
 app.include_router(cart.show_cart_item)
 app.include_router(product.product)
 app.include_router(order.order_router)
+app.include_router(order.all_orders)
 app.include_router(register.router)
 
 if __name__ == "__main__":
