@@ -43,7 +43,9 @@ app.include_router(cart.show_cart_item)
 app.include_router(product.product)
 app.include_router(order.order_router)
 app.include_router(order.all_orders)
+app.include_router(register.user_details)
 app.include_router(register.router)
+
 
 if __name__ == "__main__":
     uvicorn.run("app.main:app", host="127.0.0.1" , port = 8000 , reload=True)

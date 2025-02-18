@@ -1,7 +1,8 @@
-from fastapi import  APIRouter
+from fastapi import  APIRouter , Depends
 from app.database import get_db_connection
 from app.models.register import register 
 from passlib.context import CryptContext
+from app.verify_token import current_user 
 import logging
 
 
@@ -26,6 +27,34 @@ def register_user(user : register):
             cur.execute(query , value)
             conn.commit()
             return {"massage" : "User Register Successfully"} 
+
+    except Exception as e:
+        logging.error(f"Error user login: {e}")
+        return {"error": "Failed to register user"}
+    finally:
+        cur.close()
+        conn.close()
+        
+user_details = APIRouter( prefix="/user_details" , tags=['/user_details'])
+
+@user_details.get('')
+def user_detail(payload: str = Depends(current_user)):
+    try:
+        userid = payload['userid']
+        conn = get_db_connection()
+        cur = conn.cursor()
+        exist_user_query = ("select * from users where userid = %s")
+        cur.execute(exist_user_query , (userid,))
+        result = cur.fetchone()
+        return {
+            "user_details" : {
+                "fname" : result[1],
+                "lname" : result[2],
+                "email" : result[3],
+                "monumber" : result[4],
+                "address" : result[6],
+            }
+        } 
 
     except Exception as e:
         logging.error(f"Error user login: {e}")
