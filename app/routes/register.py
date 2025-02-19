@@ -47,7 +47,7 @@ def user_detail(payload: str = Depends(current_user)):
         cur.execute(exist_user_query , (userid,))
         result = cur.fetchone()
         return {
-            "user_details" : {
+            "user_detail" : {
                 "fname" : result[1],
                 "lname" : result[2],
                 "email" : result[3],
