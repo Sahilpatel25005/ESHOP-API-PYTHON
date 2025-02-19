@@ -295,7 +295,7 @@ def item(payload: dict = Depends(current_user)):
         row = cur.fetchall()
         result = []
         for item in row:
-            result.append({"cartitemid" : item[0] , "cartid" : item[1] , "productid" : item[2] , "qty" : item[3] , "name" : item[4] , "image" : item[5] , "price" : [6]  })
+            result.append({"cartitemid" : item[0] , "cartid" : item[1] , "productid" : item[2] , "qty" : item[3] , "name" : item[4] , "image" : item[5] , "price" : item[6]  })
             
         # If the product is not in the cart, raise an error
         if not row:
