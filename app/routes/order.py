@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException , Depends
 import logging
 from app.verify_token import current_user 
 
+
 order_router = APIRouter(prefix="/order" , tags=['order'])
 
 @order_router.post('')
@@ -95,18 +96,32 @@ def product(payload: str = Depends(current_user)):
         conn = get_db_connection()
         cur = conn.cursor()
         logging.info("Fetching all product data.")
-        query = "SELECT * from orders where userid = %s "
+        query = (""" SELECT
+                    o.OrderId,
+                    o.OrderDate,
+                    o.Status,
+                    o.Amount,
+                    ARRAY_AGG(p.Name) as ProductNames
+                FROM
+                    Orders o
+                JOIN
+                    OrderItem oi ON o.OrderId = oi.OrderId
+                JOIN
+                    Product p ON oi.ProductId = p.ProductId
+                where o.UserId = %s 
+                GROUP BY
+                    o.OrderId, o.UserId, o.OrderDate, o.Status, o.Amount
+                    """)
         cur.execute(query , (userid,))
         rows = cur.fetchall()
         result = []
         for item in rows:
-            result.append({"orderid" : item[0] , "userid" : item[1] , "orderdate" : item[2] , "status" : item[3] , "amount" : item[4]  })
+            result.append({"orderid" : item[0] , "orderdate" : item[1] , "status" : item[2] ,  "amount" : item[3] , "productname" : item[4]  })
             
         # If the order is not i, raise an error
         if not rows:
             return {"error": "order is not found"}
             # raise HTTPException(status_code=404, detail="order not found")
-            
         return {
           "massage" : "order is get successfully.",
           "cartitem" : result

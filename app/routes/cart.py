@@ -286,12 +286,12 @@ def item(payload: dict = Depends(current_user)):
         cartid = result[0]
 
         logging.info("Checking if product exists in cart.")
-        check_query = ("SELECT c.* , p.name FROM cartitem as c join product as p on c.productid = p.productid where cartid = %s ")
+        check_query = ("SELECT c.* , p.name,p.image , p.price FROM cartitem as c join product as p on c.productid = p.productid where cartid = %s ")
         cur.execute(check_query, (cartid,))
         row = cur.fetchall()
         result = []
         for item in row:
-            result.append({"cartitemid" : item[0] , "cartid" : item[1] , "productid" : item[2] , "qty" : item[3] , "name" : item[4]  })
+            result.append({"cartitemid" : item[0] , "cartid" : item[1] , "productid" : item[2] , "qty" : item[3] , "name" : item[4] , "image" : item[5] , "price" : [6]  })
             
         # If the product is not in the cart, raise an error
         if not row:
