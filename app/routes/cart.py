@@ -246,9 +246,13 @@ def delete(cart : cart , payload: str = Depends(current_user)):
         WHERE cartid = %s AND productid = %s
         """)
         cur.execute(delete_query, (cartid, cart.productid))
+        delete = cur.fetchone()
         conn.commit()
 
         return {
+            "delete_item" : {
+                "productid" :  delete[0]
+            },
             "message": "Item is delete successfully!!",
         }
             
