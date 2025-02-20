@@ -62,18 +62,8 @@ def oredr_item(payload: str = Depends(current_user)):
         cur.execute(clear_cart_q, (cartid,))
         conn.commit()
         
-        # return cuurent order 
-        
-        query = "SELECT * from orderitem where orderid = %s "
-        cur.execute(query , (orderid,))
-        rows = cur.fetchall()
-        result = []
-        for item in rows:
-            result.append({"cartitemid" : item[0] , "cartid" : item[1] , "productid" : item[2] , "qty" : item[3]})
-            
-        
-        return {"message" : "Order placed successfully and Amount is updated",
-                "current_order" : result
+        return {"message" : "Order placed successfully and Amount is updated"
+                
                 }
     
     except Exception as e:
@@ -82,6 +72,59 @@ def oredr_item(payload: str = Depends(current_user)):
     finally:
         cur.close()
         conn.close()
+        
+        
+        
+pending_orders = APIRouter( prefix="/order/pending_orders" , tags=['/order/pending_orders'])
+
+# API Endpoints
+@pending_orders.get('')
+def product(payload: str = Depends(current_user)):
+    try:
+        userid = payload['userid']
+        conn = get_db_connection()
+        cur = conn.cursor()
+        logging.info("Fetching all product data.")
+        query = (""" SELECT
+                    o.OrderId,
+                    o.OrderDate,
+                    o.Status,
+                    o.Amount,   
+                    ARRAY_AGG(p.Name) as ProductNames
+                FROM
+                    Orders o
+                JOIN
+                    OrderItem oi ON o.OrderId = oi.OrderId
+                JOIN
+                    Product p ON oi.ProductId = p.ProductId
+                where o.UserId = %s and o.Status = 'Pending'
+                GROUP BY
+                    o.OrderId, o.UserId, o.OrderDate, o.Status, o.Amount
+                order by
+                    o.OrderDate desc
+                    """)
+        cur.execute(query , (userid,))
+        rows = cur.fetchall()
+        result = []
+        for item in rows:
+            result.append({"orderid" : item[0] , "orderdate" : item[1] , "status" : item[2] ,  "amount" : item[3] , "productname" : item[4]  })
+            
+        # If the order is not i, raise an error
+        if not rows:
+            return {"error": "order is not found"}
+            # raise HTTPException(status_code=404, detail="order not found")
+        return {
+          "massage" : "order is get successfully.",
+          "cartitem" : result
+        }
+        
+    except Exception as e:
+        logging.error(f"Error fetching order: {e}")
+        return {"error": "Failed to get order"}
+    finally:
+        cur.close()
+        conn.close()
+        
         
 
 # ********************* get all order of this user fro order history **************************
@@ -111,6 +154,8 @@ def product(payload: str = Depends(current_user)):
                 where o.UserId = %s 
                 GROUP BY
                     o.OrderId, o.UserId, o.OrderDate, o.Status, o.Amount
+                order by
+                    o.OrderDate desc
                     """)
         cur.execute(query , (userid,))
         rows = cur.fetchall()

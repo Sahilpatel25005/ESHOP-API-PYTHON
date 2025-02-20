@@ -227,6 +227,8 @@ def delete(cart : cart , payload: str = Depends(current_user)):
             return {"error": "User does not have a cart"}
             # raise HTTPException(status_code=404, detail="Cart not found for the user")
         cartid = result[0]
+        logging.info(" cart ID." , cartid)
+        
 
         logging.info("Checking if product exists in cart.")
         check_query = "SELECT * FROM cartitem WHERE cartid = %s AND productid = %s"
@@ -237,7 +239,8 @@ def delete(cart : cart , payload: str = Depends(current_user)):
         if not row:
             return {"error": "Product not found in cart"}
             # raise HTTPException(status_code=404, detail="Product not found in cart")
-            
+        logging.info(" row." , row)
+        
 
         # delete item
         logging.info("Deleting the product in the cart.")
@@ -246,12 +249,11 @@ def delete(cart : cart , payload: str = Depends(current_user)):
         WHERE cartid = %s AND productid = %s
         """)
         cur.execute(delete_query, (cartid, cart.productid))
-        delete = cur.fetchone()
         conn.commit()
 
         return {
             "delete_item" : {
-                "productid" :  delete[0]
+                "productid" :  cart.productid
             },
             "message": "Item is delete successfully!!",
         }
