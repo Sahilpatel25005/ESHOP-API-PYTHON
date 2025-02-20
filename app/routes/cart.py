@@ -227,7 +227,7 @@ def delete(cart : cart , payload: str = Depends(current_user)):
             return {"error": "User does not have a cart"}
             # raise HTTPException(status_code=404, detail="Cart not found for the user")
         cartid = result[0]
-        logging.info(" cart ID." , cartid)
+       
         
 
         logging.info("Checking if product exists in cart.")
@@ -239,8 +239,7 @@ def delete(cart : cart , payload: str = Depends(current_user)):
         if not row:
             return {"error": "Product not found in cart"}
             # raise HTTPException(status_code=404, detail="Product not found in cart")
-        logging.info(" row." , row)
-        
+       
 
         # delete item
         logging.info("Deleting the product in the cart.")
