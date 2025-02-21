@@ -207,7 +207,6 @@ def decrese(cart : cart , payload: str = Depends(current_user)):
         
         
         
-        
 delete_item_router = APIRouter(prefix= "/cart/delete" , tags = ['cart/delete'])
 
 @delete_item_router.delete('')
@@ -228,8 +227,6 @@ def delete(cart : cart , payload: str = Depends(current_user)):
             # raise HTTPException(status_code=404, detail="Cart not found for the user")
         cartid = result[0]
        
-        
-
         logging.info("Checking if product exists in cart.")
         check_query = "SELECT * FROM cartitem WHERE cartid = %s AND productid = %s"
         cur.execute(check_query, (cartid, cart.productid))
@@ -249,6 +246,21 @@ def delete(cart : cart , payload: str = Depends(current_user)):
         """)
         cur.execute(delete_query, (cartid, cart.productid))
         conn.commit()
+        
+        
+        logging.info("Checking if cart is empty than delete.")
+        check_query = "SELECT * FROM cartitem WHERE cartid = %s "
+        cur.execute(check_query, (cartid,))
+        row = cur.fetchone()
+
+        # If the product is not in the cart, raise an error
+        if not row:
+            delete_query = ("""
+            delete from cart
+            WHERE cartid = %s 
+            """)
+            cur.execute(delete_query, (cartid,))
+            conn.commit()
 
         return {
             "delete_item" : {

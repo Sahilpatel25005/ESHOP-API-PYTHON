@@ -1,0 +1,18 @@
+2025-02-21 14:59:54,016 - INFO - Incoming POST request: http://127.0.0.1:8000/login
+2025-02-21 14:59:54,017 - INFO - Request body: {
+  "email": "sahil@gmail.com",
+  "password": "Sahil25@"
+}
+2025-02-21 14:59:54,205 - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python312\Lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-02-21 14:59:54,531 - INFO - Response status code: 200
+2025-02-21 15:00:12,378 - INFO - Incoming POST request: http://127.0.0.1:8000/cart/add
+2025-02-21 15:00:12,379 - INFO - Request body: {
+  "productid": 2000000
+}
+2025-02-21 15:00:12,437 - ERROR - Error add item: 404: Product not found
+2025-02-21 15:00:12,438 - INFO - Response status code: 200
