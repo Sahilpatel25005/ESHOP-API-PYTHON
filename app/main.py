@@ -1,18 +1,12 @@
-from fastapi import FastAPI , Request
-import logging
+from app.Logger_config import logger
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import login, product, register , cart , order
+from app.routes import login, product, register, cart, order
 import uvicorn
 
 app = FastAPI(title="eShop API")
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.StreamHandler()
-    ],
-)
+
 
 # CORS Middleware
 app.add_middleware(
@@ -25,13 +19,16 @@ app.add_middleware(
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    logging.info(f"Incoming {request.method} request: {request.url}")
+    logger.info(f"Incoming {request.method} request: {request.url}")
     if request.method in ['POST', 'PUT', 'DELETE']:
         body = await request.body()
-        logging.info(f"Request body: {body.decode('utf-8')}")
+        try:
+            logger.info(f"Request body: {body.decode('utf-8')}")
+        except UnicodeDecodeError:
+            logger.info("Request body: (binary or non-UTF-8 data)")
     response = await call_next(request)
-    logging.info(f"Response status code: {response.status_code}")
-    return response 
+    logger.info(f"Response status code: {response.status_code}")
+    return response
 
 # Include Routers
 app.include_router(login.login_router)
@@ -48,5 +45,6 @@ app.include_router(register.user_details)
 app.include_router(register.router)
 
 
+
 if __name__ == "__main__":
-    uvicorn.run("app.main:app", host="127.0.0.1" , port = 8000 , reload=True)
+    uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=False)

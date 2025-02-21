@@ -1,7 +1,7 @@
 from app.database import get_db_connection
 from fastapi import APIRouter, HTTPException , Depends
-import logging
 from app.verify_token import current_user 
+from app.Logger_config   import logger
 
 
 order_router = APIRouter(prefix="/order" , tags=['order'])
@@ -22,6 +22,7 @@ def oredr_item(payload: str = Depends(current_user)):
         
         if cartid == None:
             return {"error" : "Cart is empty"}
+        
         else:
             order_q = ("INSERT INTO orders(userid, status, amount)VALUES (%s , %s ,%s) returning orderid")
             order_v = (userid , "Pending" ,0)
@@ -62,16 +63,21 @@ def oredr_item(payload: str = Depends(current_user)):
         cur.execute(clear_cart_q, (cartid,))
         conn.commit()
         
-        return {"message" : "Order placed successfully and Amount is updated"
+        return {"message" : "Order placed successfully ",
+                "orderid" : orderid
                 
                 }
     
     except Exception as e:
-        logging.error(f"Error place order: {e}")
+        logger.error(f"Error place order: {e}")
         return {"error": "Failed to place order"}
     finally:
         cur.close()
         conn.close()
+        
+        
+        
+# ********************* get all pending order of this user fro order history **************************
         
         
         
@@ -84,7 +90,7 @@ def product(payload: str = Depends(current_user)):
         userid = payload['userid']
         conn = get_db_connection()
         cur = conn.cursor()
-        logging.info("Fetching all product data.")
+        logger.info("Fetching all product data.")
         query = (""" SELECT
                     o.OrderId,
                     o.OrderDate,
@@ -119,7 +125,7 @@ def product(payload: str = Depends(current_user)):
         }
         
     except Exception as e:
-        logging.error(f"Error fetching order: {e}")
+        logger.error(f"Error fetching order: {e}")
         return {"error": "Failed to get order"}
     finally:
         cur.close()
@@ -138,7 +144,7 @@ def product(payload: str = Depends(current_user)):
         userid = payload['userid']
         conn = get_db_connection()
         cur = conn.cursor()
-        logging.info("Fetching all product data.")
+        logger.info("Fetching all product data.")
         query = (""" SELECT
                     o.OrderId,
                     o.OrderDate,
@@ -173,7 +179,7 @@ def product(payload: str = Depends(current_user)):
         }
         
     except Exception as e:
-        logging.error(f"Error fetching order: {e}")
+        logger.error(f"Error fetching order: {e}")
         return {"error": "Failed to get order"}
     finally:
         cur.close()
@@ -189,7 +195,7 @@ def product(payload: str = Depends(current_user)):
 #         userid = payload['userid']
 #         conn = get_db_connection()
 #         cur = conn.cursor()
-#         logging.info("Fetching all product data.")
+#         logger.info("Fetching all product data.")
 #         query = "SELECT * from orderitem where userid = %s "
 #         cur.execute(query , (userid,))
 #         rows = cur.fetchall()
@@ -208,7 +214,7 @@ def product(payload: str = Depends(current_user)):
 #         }
         
 #     except Exception as e:
-#         logging.error(f"Error fetching data: {e}")
+#         logger.error(f"Error fetching data: {e}")
 #         return {"error": "Failed to fetch videos"}
 #     finally:
 #         cur.close()
