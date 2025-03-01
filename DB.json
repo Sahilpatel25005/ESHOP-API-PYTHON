@@ -1,7 +1,0 @@
-{
-    "host": "localhost",
-    "dbname": "ESHOP",
-    "user": "postgres",
-    "password": "password",
-    "port": 5432
-}
