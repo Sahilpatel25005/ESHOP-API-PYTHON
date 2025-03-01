@@ -1,18 +1,77 @@
-2025-02-21 14:59:54,016 - INFO - Incoming POST request: http://127.0.0.1:8000/login
-2025-02-21 14:59:54,017 - INFO - Request body: {
+2025-03-01 14:38:58,158 - INFO - Incoming OPTIONS request: http://127.0.0.1:8000/cart/cart_item
+2025-03-01 14:38:58,174 - INFO - Incoming OPTIONS request: http://127.0.0.1:8000/list_product
+2025-03-01 14:38:58,190 - INFO - Response status code: 200
+2025-03-01 14:38:58,190 - INFO - Response status code: 200
+2025-03-01 14:38:58,190 - INFO - Incoming GET request: http://127.0.0.1:8000/cart/cart_item
+2025-03-01 14:38:58,190 - INFO - Incoming GET request: http://127.0.0.1:8000/list_product
+2025-03-01 14:38:58,205 - INFO - Response status code: 401
+2025-03-01 14:38:58,205 - INFO - Response status code: 401
+2025-03-01 15:26:14,835 - INFO - Incoming OPTIONS request: http://127.0.0.1:8000/cart/cart_item
+2025-03-01 15:26:14,851 - INFO - Incoming OPTIONS request: http://127.0.0.1:8000/list_product
+2025-03-01 15:26:14,855 - INFO - Response status code: 200
+2025-03-01 15:26:14,855 - INFO - Response status code: 200
+2025-03-01 15:26:14,867 - INFO - Incoming GET request: http://127.0.0.1:8000/cart/cart_item
+2025-03-01 15:26:14,867 - INFO - Response status code: 401
+2025-03-01 15:26:14,891 - INFO - Incoming GET request: http://127.0.0.1:8000/list_product
+2025-03-01 15:26:14,899 - INFO - Response status code: 401
+2025-03-01 15:26:21,029 - INFO - Incoming GET request: http://127.0.0.1:8000/cart/cart_item
+2025-03-01 15:26:21,033 - INFO - Response status code: 401
+2025-03-01 15:26:21,033 - INFO - Incoming GET request: http://127.0.0.1:8000/list_product
+2025-03-01 15:26:21,041 - INFO - Response status code: 401
+2025-03-01 15:26:22,463 - INFO - Incoming GET request: http://127.0.0.1:8000/cart/cart_item
+2025-03-01 15:26:22,465 - INFO - Response status code: 401
+2025-03-01 15:26:22,468 - INFO - Incoming GET request: http://127.0.0.1:8000/list_product
+2025-03-01 15:26:22,470 - INFO - Response status code: 401
+2025-03-01 15:26:43,951 - INFO - Incoming GET request: http://127.0.0.1:8000/cart/cart_item
+2025-03-01 15:26:43,959 - INFO - Incoming GET request: http://127.0.0.1:8000/list_product
+2025-03-01 15:26:43,959 - INFO - Response status code: 401
+2025-03-01 15:26:43,967 - INFO - Response status code: 401
+2025-03-01 15:27:10,155 - INFO - Incoming POST request: http://127.0.0.1:8000/login
+2025-03-01 15:27:10,155 - INFO - Request body: {
   "email": "sahil@gmail.com",
   "password": "Sahil25@"
 }
-2025-02-21 14:59:54,205 - WARNING - (trapped) error reading bcrypt version
+2025-03-01 15:27:10,349 - WARNING - (trapped) error reading bcrypt version
 Traceback (most recent call last):
   File "C:\Users\dell\AppData\Local\Programs\Python\Python312\Lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
     version = _bcrypt.__about__.__version__
               ^^^^^^^^^^^^^^^^^
 AttributeError: module 'bcrypt' has no attribute '__about__'
-2025-02-21 14:59:54,531 - INFO - Response status code: 200
-2025-02-21 15:00:12,378 - INFO - Incoming POST request: http://127.0.0.1:8000/cart/add
-2025-02-21 15:00:12,379 - INFO - Request body: {
-  "productid": 2000000
+2025-03-01 15:27:10,743 - INFO - Response status code: 200
+2025-03-01 15:27:39,598 - INFO - Incoming OPTIONS request: http://127.0.0.1:8000/login
+2025-03-01 15:27:39,598 - INFO - Response status code: 200
+2025-03-01 15:27:39,605 - INFO - Incoming POST request: http://127.0.0.1:8000/login
+2025-03-01 15:27:39,608 - INFO - Request body: {"email":"asodariyasahil3@gmail.com","password":"Sahil@25"}
+2025-03-01 15:27:40,345 - INFO - Response status code: 200
+2025-03-01 15:27:40,643 - INFO - Incoming GET request: http://127.0.0.1:8000/cart/cart_item
+2025-03-01 15:27:40,645 - INFO - Incoming GET request: http://127.0.0.1:8000/list_product
+2025-03-01 15:27:40,645 - INFO - Fetching cart items for user ID: 28
+2025-03-01 15:27:40,776 - INFO - Fetching all product data.
+2025-03-01 15:27:40,815 - INFO - Fetching cart ID for user.
+2025-03-01 15:27:40,827 - INFO - Response status code: 200
+2025-03-01 15:27:40,829 - INFO - Response status code: 200
+2025-03-01 15:27:43,593 - INFO - Incoming GET request: http://127.0.0.1:8000/list_product
+2025-03-01 15:27:43,697 - INFO - Fetching all product data.
+2025-03-01 15:27:43,706 - INFO - Response status code: 200
+2025-03-01 15:27:47,169 - INFO - Incoming GET request: http://127.0.0.1:8000/list_product
+2025-03-01 15:27:47,335 - INFO - Fetching all product data.
+2025-03-01 15:27:47,350 - INFO - Response status code: 200
+2025-03-01 15:27:56,161 - INFO - Incoming GET request: http://127.0.0.1:8000/cart/cart_item
+2025-03-01 15:27:56,175 - INFO - Fetching cart items for user ID: 28
+2025-03-01 15:27:56,186 - INFO - Incoming GET request: http://127.0.0.1:8000/list_product
+2025-03-01 15:27:56,342 - INFO - Fetching cart ID for user.
+2025-03-01 15:27:56,348 - INFO - Response status code: 200
+2025-03-01 15:27:56,413 - INFO - Fetching all product data.
+2025-03-01 15:27:56,428 - INFO - Response status code: 200
+2025-03-01 16:08:29,691 - INFO - Incoming POST request: http://127.0.0.1:8000/login
+2025-03-01 16:08:29,694 - INFO - Request body: {
+  "email": "sahil@gmail.com",
+  "password": "Sahil25@"
 }
-2025-02-21 15:00:12,437 - ERROR - Error add item: 404: Product not found
-2025-02-21 15:00:12,438 - INFO - Response status code: 200
+2025-03-01 16:08:29,852 - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python312\Lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-03-01 16:08:30,295 - INFO - Response status code: 200

@@ -2,7 +2,7 @@ import psycopg2
 import psycopg2.extras
 import json
 
-with open("DB.json", "r") as json_file:
+with open("app/DB.json", "r") as json_file:
     DB_CONFIG = json.load(json_file)
 
 # Utility function to connect to the database
