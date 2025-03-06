@@ -43,7 +43,7 @@ def create_access_token(data: dict):
 login_router = APIRouter(prefix="/login", tags=['login'])
 
 # Login API
-@login_router.post('')
+@login_router.post('/')
 def login_user(login: LoginModel):
     user = authenticate_user(login.email, login.password)
     token = create_access_token({'sub': user['email'] , 'userid' : user['userid']})
