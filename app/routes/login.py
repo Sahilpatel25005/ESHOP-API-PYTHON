@@ -28,7 +28,7 @@ def authenticate_user(email: str, password: str):
     user = cur.fetchone()
     
     if not user or not verify_password(password, user["password"]):
-        raise HTTPException(status_code=401, detail="Invalid email or password")
+        raise HTTPException(status_code=401, detail={"error" :"Invalid email or password"})
     
     cur.close()
     conn.close()
