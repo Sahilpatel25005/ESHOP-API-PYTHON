@@ -31,6 +31,10 @@ async def log_requests(request: Request, call_next):
     logger.info(f"Response status code: {response.status_code}")
     return response
 
+@app.get("/")
+async def root():
+    return {"message": "Hello from FastAPI!"}
+
 # Include Routers
 app.include_router(login.login_router)
 app.include_router(cart.add_cart_router)
@@ -48,4 +52,4 @@ app.include_router(register.router)
 handler = Mangum(app)
 
 if __name__ == "__main__":
-    uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=False)
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=False)
