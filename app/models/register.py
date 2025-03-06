@@ -1,19 +1,17 @@
-
 from pydantic import BaseModel, EmailStr, field_validator
 
 
 class register(BaseModel):
-    fname : str
-    lname :str
-    email : EmailStr
-    monumber : str
-    password : str
-    address : str
-    
+    fname: str
+    lname: str
+    email: EmailStr
+    monumber: str
+    password: str
+    address: str
+
     @field_validator("password")
     @classmethod
     def validate_password(cls, value):
-        """Custom password validator."""
         if len(value) < 8:
             raise ValueError("Password must be at least 8 characters long.")
         if not any(c.isupper() for c in value):

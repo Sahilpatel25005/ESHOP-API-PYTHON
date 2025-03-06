@@ -2,7 +2,7 @@ from app.Logger_config import logger
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from mangum import Mangum 
-from app.routes import login, product, register, cart, order
+# from app.routes import login, product, register, cart, order
 import uvicorn
 
 app = FastAPI(title="eShop API")
@@ -31,21 +31,25 @@ async def log_requests(request: Request, call_next):
     logger.info(f"Response status code: {response.status_code}")
     return response
 
+@app.get("/")
+async def root():
+    return {"message": "Hello from FastAPI!"}
+
 # Include Routers
-app.include_router(login.login_router)
-app.include_router(cart.add_cart_router)
-app.include_router(cart.increse_qty_router)
-app.include_router(cart.decrese_qty_router)
-app.include_router(cart.delete_item_router)
-app.include_router(cart.show_cart_item)
-app.include_router(product.product)
-app.include_router(order.order_router)
-app.include_router(order.all_orders)
-app.include_router(order.pending_orders)
-app.include_router(register.user_details)
-app.include_router(register.router)
+# app.include_router(login.login_router)
+# app.include_router(cart.add_cart_router)
+# app.include_router(cart.increse_qty_router)
+# app.include_router(cart.decrese_qty_router)
+# app.include_router(cart.delete_item_router)
+# app.include_router(cart.show_cart_item)
+# app.include_router(product.product)
+# app.include_router(order.order_router)
+# app.include_router(order.all_orders)
+# app.include_router(order.pending_orders)
+# app.include_router(register.user_details)
+# app.include_router(register.router)
 
 handler = Mangum(app)
 
 if __name__ == "__main__":
-    uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=False)
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=False)
