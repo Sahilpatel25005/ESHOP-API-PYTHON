@@ -1,7 +1,7 @@
 import logging
 
 
-file_handler = logging.FileHandler('app.log', mode='a')
+# file_handler = logging.FileHandler('app.log', mode='a')
 stream_handler = logging.StreamHandler()
 
 # Configure logging
