@@ -1,6 +1,6 @@
 {
-    "host": "dpg-cv18hfjtq21c73cm16mg-a",
-    "dbname": "renderdatabase",
+    "host": "dpg-cv18hfjtq21c73cm16mg-a.oregon-postgres.render.com",
+    "dbname": "eshop_database_2lgw",
     "user": "eshop_database_2lgw_user",
     "password": "vJKU09sRIYAtJE666vCYR659X5sg2Img",
     "port": 5432
