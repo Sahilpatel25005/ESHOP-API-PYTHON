@@ -1,79 +1,114 @@
 from app.database import get_db_connection
-from fastapi import APIRouter, HTTPException , Depends
-from app.verify_token import current_user 
-from app.Logger_config   import logger
+from fastapi import APIRouter, HTTPException, Depends
+from app.verify_token import current_user
+from app.Logger_config import logger
+import razorpay
+from decimal import Decimal
 
+RAZORPAY_KEY_ID = 'rzp_test_xSeVesER0OFBb1'
+RAZORPAY_KEY_SECRET = 'UbchyLSqq7AkRKLfga85rUtv'
+client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
-order_router = APIRouter(prefix="/order" , tags=['order'])
+order_router = APIRouter(prefix="/order", tags=['order'])
 
 @order_router.post('')
-def oredr_item(payload: str = Depends(current_user)):
+def order_item(payload: str = Depends(current_user)):
     try:
         userid = payload['userid']
         conn = get_db_connection()
         cur = conn.cursor()
         
-        # ****************** fetch cartid ******************
-        
-        cart_q = ("select cartid from cart where userid = %s")
-        cur.execute(cart_q , (userid,))
+        # Fetch cartid
+        cart_q = "SELECT cartid FROM cart WHERE userid = %s"
+        cur.execute(cart_q, (userid,))
         cart_row = cur.fetchone()
+        
+        if not cart_row:
+            return {"error": "Cart is empty"}
+        
         cartid = cart_row[0]
         
-        if cartid == None:
-            return {"error" : "Cart is empty"}
-        
-        else:
-            order_q = ("INSERT INTO orders(userid, status, amount)VALUES (%s , %s ,%s) returning orderid")
-            order_v = (userid , "Pending" ,0)
-            cur.execute(order_q , order_v)
-            orderid = cur.fetchone()[0]
-            conn.commit()
+        # Insert new order
+        order_q = """
+            INSERT INTO orders(userid, status, amount, razorpay_order_id)
+            VALUES (%s, %s, %s, %s) RETURNING orderid
+        """
+        order_v = (userid, "Pending", 0, None)
+        cur.execute(order_q, order_v)
+        orderid = cur.fetchone()[0]
+        conn.commit()
         
         if not orderid:
             raise HTTPException(status_code=404, detail="Order not found")
         
-        # ****************** select item from cartitem and insert into orderitem ******************
-        
-        insert_orderI = ("""   
-                            INSERT INTO orderitem (orderid, productid, qty, price)
-                            SELECT %s, a.productid, a.qty, b.price
-                            FROM cartitem a
-                            join product b
-                            on a.productid = b.productid
-                            WHERE cartid = %s ;
-                        """)
-        insert_orderV = ( orderid , cartid )
-        cur.execute(insert_orderI , insert_orderV)
+        # Insert order items
+        insert_orderI = """
+            INSERT INTO orderitem (orderid, productid, qty, price)
+            SELECT %s, a.productid, a.qty, b.price
+            FROM cartitem a
+            JOIN product b ON a.productid = b.productid
+            WHERE cartid = %s;
+        """
+        cur.execute(insert_orderI, (orderid, cartid))
         conn.commit()
         
-        # *****************  update order in amount ******************
-        update_order_q = ("""
-                          UPDATE orders 
-                            SET amount = (
-                            SELECT SUM(qty * price) 
-                            FROM orderitem 
-                            WHERE orderitem.orderid = orders.orderid
-                            )
-                            WHERE orderid = %s""")
+        # Update order amount
+        update_order_q = """
+            UPDATE orders 
+            SET amount = (
+                SELECT SUM(qty * price) 
+                FROM orderitem 
+                WHERE orderitem.orderid = orders.orderid
+            )
+            WHERE orderid = %s;
+        """
         cur.execute(update_order_q, (orderid,))
         conn.commit()
         
-        clear_cart_q = ("delete from cart where cartid = %s")
+        # Fetch total amount
+        cur.execute("SELECT amount FROM orders WHERE orderid = %s", (orderid,))
+        total_amount = cur.fetchone()[0]
+        
+        if isinstance(total_amount, Decimal):
+            total_amount = float(total_amount)
+        
+        # Create Razorpay order
+        razorpay_order = client.order.create({
+            "amount": int(total_amount * 100),  # amount in paise
+            "currency": "INR",
+            "payment_capture": 1,
+        })
+        
+        # Update order with Razorpay order ID
+        update_razorpay_q = """
+            UPDATE orders
+            SET razorpay_order_id = %s
+            WHERE orderid = %s;
+        """
+        cur.execute(update_razorpay_q, (razorpay_order["id"], orderid))
+        conn.commit()
+        
+        # Clear cart
+        clear_cart_q = "DELETE FROM cart WHERE cartid = %s"
         cur.execute(clear_cart_q, (cartid,))
         conn.commit()
         
-        return {"message" : "Order placed successfully ",
-                "orderid" : orderid
-                
-                }
+        return {
+            "message": "Order placed successfully",
+            "orderid": orderid,
+            "razorpay_order_id": razorpay_order["id"],
+            "amount": total_amount,
+            "currency": "INR",
+        }
     
     except Exception as e:
-        logger.error(f"Error place order: {e}")
+        logger.error(f"Error placing order: {e}")
         return {"error": "Failed to place order"}
+    
     finally:
         cur.close()
         conn.close()
+
         
         
         

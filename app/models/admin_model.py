@@ -1,7 +1,7 @@
 
 from pydantic import BaseModel, EmailStr, field_validator
-
-class LoginModel(BaseModel):
+    
+class AdminModel(BaseModel):
     email: EmailStr
     password: str
 
@@ -21,5 +21,9 @@ class LoginModel(BaseModel):
             raise ValueError("Password must contain at least one special character.")
         return value
     
-
-    
+class admin_insert_product(BaseModel):
+    name:str
+    price:str
+    description:str
+    image:str
+    category:str

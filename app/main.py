@@ -2,7 +2,7 @@ from app.Logger_config import logger
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
  
-from app.routes import login, product, register, cart, order
+from app.routes import login, product, register, cart, order,admin,search
 import uvicorn
 
 app = FastAPI(title="eShop API")
@@ -35,6 +35,8 @@ async def log_requests(request: Request, call_next):
 
 # Include Routers
 app.include_router(login.login_router)
+app.include_router(admin.admin_router)
+app.include_router(admin.admin_add_product)
 app.include_router(cart.add_cart_router)
 app.include_router(cart.increse_qty_router)
 app.include_router(cart.decrese_qty_router)
@@ -46,6 +48,7 @@ app.include_router(order.all_orders)
 app.include_router(order.pending_orders)
 app.include_router(register.user_details)
 app.include_router(register.router)
+app.include_router(search.search_router)
 
 
 
