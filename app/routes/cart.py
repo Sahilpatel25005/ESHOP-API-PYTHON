@@ -117,7 +117,7 @@ def increse(cart : cart , payload: str = Depends(current_user)):
         update_query = ("""
         UPDATE cartitem
         SET qty = qty + 1
-        WHERE cartid = %s AND productid = %s
+        WHERE cartid = %s AND productid = %s and qty < 10
         RETURNING cartid, productid, qty;
         """)
         cur.execute(update_query, (cartid, cart.productid))

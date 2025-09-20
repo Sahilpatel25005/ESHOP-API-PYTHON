@@ -1,7 +1,8 @@
+
 {
-    "host": "dpg-cv18hfjtq21c73cm16mg-a.oregon-postgres.render.com",
-    "dbname": "eshop_database_2lgw",
-    "user": "eshop_database_2lgw_user",
-    "password": "vJKU09sRIYAtJE666vCYR659X5sg2Img",
+    "host": "localhost",
+    "dbname": "eshop",
+    "user": "postgres",
+    "password": "password",
     "port": 5432
 }
