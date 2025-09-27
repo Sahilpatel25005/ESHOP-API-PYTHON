@@ -62,15 +62,13 @@ def search(search: searchAI):
             "select p.* from product p join category c on p.categoryid = c.categoryid where lower(c.name) like lower(%s) and p.price between %s and %s",
             (f"%{category}%", min_price, max_price)
         )
-        col_names = [desc[0] for desc in cur.description]  # Get column names
+
         rows = cur.fetchall()
-        result = []  # Initialize an empty list
+        
+        ids = []
         for row in rows:
-            row_dict = {}  # Create an empty dictionary for each row
-            for index, col_name in enumerate(col_names):
-                row_dict[col_name] = row[index]  # Assign values to the dictionary
-            result.append(row_dict)  # Add the dictionary to the result list
-        return result
+            ids.append(row[0]) #give product id that is filter by search query
+        return ids
 
     except Exception as e:
         logging.error(f"Error search item: {e}")
