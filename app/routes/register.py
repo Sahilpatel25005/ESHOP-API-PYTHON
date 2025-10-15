@@ -1,4 +1,4 @@
-from fastapi import  APIRouter , Depends
+from fastapi import  APIRouter , Depends, Query
 from app.database import get_db_connection
 from app.models.register import register 
 from passlib.context import CryptContext
@@ -37,29 +37,58 @@ def register_user(user : register):
         
 user_details = APIRouter( prefix="/user_details" , tags=['/user_details'])
 
+
 @user_details.get('')
-def user_detail(payload: str = Depends(current_user)):
+def get_user_details(
+    payload: dict = Depends(current_user),
+    promocode_name: str = Query(None, description="Optional promo code name to check value")
+):
+    """
+    Fetch user details.
+    If promocode_name is provided, return its value from promocodes table.
+    """
+    conn = None
+    cur = None
+
     try:
         userid = payload['userid']
         conn = get_db_connection()
         cur = conn.cursor()
-        exist_user_query = ("select * from users where userid = %s")
-        cur.execute(exist_user_query , (userid,))
-        result = cur.fetchone()
-        return {
-            "user_detail" : {
-                "fname" : result[1],
-                "lname" : result[2],
-                "email" : result[3],
-                "monumber" : result[4],
-                "address" : result[6],
-            }
-        } 
+
+        # ✅ Fetch user details
+        cur.execute("SELECT * FROM users WHERE userid = %s", (userid,))
+        user_result = cur.fetchone()
+
+        if not user_result:
+            return {"error": "User not found"}
+
+        user_data = {
+            "fname": user_result[1],
+            "lname": user_result[2],
+            "email": user_result[3],
+            "monumber": user_result[4],
+            "address": user_result[6]
+        }
+
+        # ✅ If a promo code name is passed → fetch its value
+        if promocode_name:
+            cur.execute("SELECT value FROM promocodes WHERE name = %s", (promocode_name,))
+            promo = cur.fetchone()
+
+            if promo:
+                user_data["promocode_name"] = promocode_name
+                user_data["promocode_value"] = promo[0]
+            else:
+                user_data["promocode_name"] = promocode_name
+                user_data["promocode_value"] = "Invalid promo code"
+
+        return {"user_detail": user_data}
 
     except Exception as e:
-        logging.error(f"Error user login: {e}")
-        return {"error": "Failed to register user"}
+        logging.error(f"Error in user detail: {e}")
+        return {"error": "Failed to get user details"}
     finally:
-        cur.close()
-        conn.close()
-        
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()

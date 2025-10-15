@@ -6,6 +6,7 @@ from app.verify_token import current_user
 import logging
 import jwt
 from datetime import datetime, timezone, timedelta
+import os
 
 
 # JWT Config
@@ -56,36 +57,34 @@ def login_user(admin: AdminModel):
 
 admin_add_product = APIRouter(prefix='/admin_add_product', tags=['admin_add_product'])
 
+UPLOAD_FOLDER = r"C:\REACT PROGRAM\ResponsiveEcommerce\public\products"
+
 @admin_add_product.post('/')
-def add_product(admin : admin_insert_product):
+async def add_product(admin: admin_insert_product):
     try:
         conn = get_db_connection()
         cur = conn.cursor()
         
-        cur.execute("select categoryid from category where name = %s", (admin.category,))
-        category_ids = cur.fetchone()
-        if not category_ids:
+        # Get category id
+        cur.execute("SELECT categoryid FROM category WHERE name = %s", (admin.category,))
+        category_row = cur.fetchone()
+        if not category_row:
             raise HTTPException(status_code=400, detail="Category not found")
+        category_id = category_row[0]
         
-        category_id = category_ids[0]
+        # Insert product (image is just filename, not a file)
+        cur.execute("""
+            INSERT INTO product (name, description, price, image, categoryid)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (admin.name, admin.description, admin.price, admin.image, category_id))
         
-        cur.execute("INSERT INTO product (name, description, price , image, categoryid) VALUES (%s, %s, %s, %s, %s)",
-                   (admin.name, admin.description,admin.price, admin.image, category_id))
         conn.commit()
-        cur.close()
-        conn.close()    
         return {"message": "Product added successfully"}
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail={"error" :"Token has expired"})
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail={"error" :"Invalid token"})
-    except jwt.DecodeError:
-        raise HTTPException(status_code=401, detail={"error" :"Invalid token"})
-    except jwt.InvalidSignatureError:
-        raise HTTPException(status_code=401, detail={"error" :"Invalid token"})
+    
     except Exception as e:
         logging.error(f"Error adding product: {e}")
-        return {"error": "Failed to add product"}
+        return {"error": str(e)}
+    
     finally:
         cur.close()
         conn.close()

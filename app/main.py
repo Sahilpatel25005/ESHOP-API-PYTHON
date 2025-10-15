@@ -2,7 +2,7 @@ from app.Logger_config import logger
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
  
-from app.routes import login, product, register, cart, order,admin,search, generate_product_details
+from app.routes import login, product, register, cart, order,admin,search, generate_product_details, stripe_payment
 import uvicorn
 
 app = FastAPI(title="eShop API")
@@ -50,6 +50,7 @@ app.include_router(register.user_details)
 app.include_router(register.router)
 app.include_router(search.search_router)
 app.include_router(generate_product_details.generate_product_details_router)
+app.include_router(stripe_payment.payment_router)
 
 
 

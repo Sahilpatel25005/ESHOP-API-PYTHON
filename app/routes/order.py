@@ -2,12 +2,9 @@ from app.database import get_db_connection
 from fastapi import APIRouter, HTTPException, Depends
 from app.verify_token import current_user
 from app.Logger_config import logger
-import razorpay
 from decimal import Decimal
 
-RAZORPAY_KEY_ID = 'rzp_test_xSeVesER0OFBb1'
-RAZORPAY_KEY_SECRET = 'UbchyLSqq7AkRKLfga85rUtv'
-client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+
 
 order_router = APIRouter(prefix="/order", tags=['order'])
 
@@ -72,21 +69,6 @@ def order_item(payload: str = Depends(current_user)):
         if isinstance(total_amount, Decimal):
             total_amount = float(total_amount)
         
-        # Create Razorpay order
-        razorpay_order = client.order.create({
-            "amount": int(total_amount * 100),  # amount in paise
-            "currency": "INR",
-            "payment_capture": 1,
-        })
-        
-        # Update order with Razorpay order ID
-        update_razorpay_q = """
-            UPDATE orders
-            SET razorpay_order_id = %s
-            WHERE orderid = %s;
-        """
-        cur.execute(update_razorpay_q, (razorpay_order["id"], orderid))
-        conn.commit()
         
         # Clear cart
         clear_cart_q = "DELETE FROM cart WHERE cartid = %s"
@@ -96,7 +78,6 @@ def order_item(payload: str = Depends(current_user)):
         return {
             "message": "Order placed successfully",
             "orderid": orderid,
-            "razorpay_order_id": razorpay_order["id"],
             "amount": total_amount,
             "currency": "INR",
         }
@@ -138,7 +119,7 @@ def product(payload: str = Depends(current_user)):
                     OrderItem oi ON o.OrderId = oi.OrderId
                 JOIN
                     Product p ON oi.ProductId = p.ProductId
-                where o.UserId = %s and o.Status = 'Pending'
+                where o.UserId = %s and o.Status IN ('Pending', 'Shipped')
                 GROUP BY
                     o.OrderId, o.UserId, o.OrderDate, o.Status, o.Amount
                 order by
@@ -180,24 +161,28 @@ def product(payload: str = Depends(current_user)):
         conn = get_db_connection()
         cur = conn.cursor()
         logger.info("Fetching all product data.")
-        query = (""" SELECT
-                    o.OrderId,
-                    o.OrderDate,
-                    o.Status,
-                    o.Amount,
-                    ARRAY_AGG(p.Name) as ProductNames
-                FROM
-                    Orders o
-                JOIN
-                    OrderItem oi ON o.OrderId = oi.OrderId
-                JOIN
-                    Product p ON oi.ProductId = p.ProductId
-                where o.UserId = %s 
-                GROUP BY
-                    o.OrderId, o.UserId, o.OrderDate, o.Status, o.Amount
-                order by
-                    o.OrderDate desc
-                    """)
+        query = ("""
+                    SELECT
+                        o.OrderId,
+                        o.OrderDate,
+                        o.Status,
+                        o.Amount,
+                        ARRAY_AGG(p.Name) AS ProductNames
+                    FROM
+                        Orders o
+                    JOIN
+                        OrderItem oi ON o.OrderId = oi.OrderId
+                    JOIN
+                        Product p ON oi.ProductId = p.ProductId
+                    WHERE
+                        o.UserId = %s
+                        AND o.Status IN ('Cancelled', 'Delivered')
+                    GROUP BY
+                        o.OrderId, o.UserId, o.OrderDate, o.Status, o.Amount
+                    ORDER BY
+                        o.OrderDate DESC
+                """)
+
         cur.execute(query , (userid,))
         rows = cur.fetchall()
         result = []

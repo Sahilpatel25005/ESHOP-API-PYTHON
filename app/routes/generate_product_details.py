@@ -25,28 +25,34 @@ async def generate_product(image: UploadFile = File(...)):
         cur = conn.cursor()
         query = "select name from category"
         cur.execute(query)
-        categories = cur.fetchall()
-        if not categories:
+        categories_row = cur.fetchall()
+        if not categories_row:
             raise HTTPException(status_code=500, detail="No categories found in database")
           
-        print(categories)
-        
+        categories = [row[0] for row in categories_row]  
 
         response = model.generate_content([
-            """You are an assistant that generates e-commerce product data.
+            f"""
+            You are an assistant that generates e-commerce product data.
+
             Task:
             - Look at the given image.
-            - Generate a short, catchy product title.
-            - Generate a clear, engaging product description (2–3 sentences).
+            - Generate:
+                1. A short, catchy product title.
+                2. A clear, engaging product description (2–3 sentences).
+                3. Select the most relevant product category from this list: {categories}.
             - Return output strictly in JSON format only.
+
             Example:
-            {
-              "title": "Trendy Black Aviator Sunglasses",
-              "description": "Sleek and stylish aviators with UV protection, lightweight frame, and a modern edge."
-            }
+            {{
+            "title": "Trendy Black Aviator Sunglasses",
+            "description": "Sleek and stylish aviators with UV protection, lightweight frame, and a modern edge.",
+            "category": "Sunglasses"
+            }}
             """,
             {"mime_type": image.content_type, "data": img_bytes}
         ])
+
 
         raw_text = response.text.strip()
 
@@ -62,7 +68,7 @@ async def generate_product(image: UploadFile = File(...)):
         except json.JSONDecodeError:
             raise HTTPException(status_code=500, detail="Gemini returned malformed JSON")
 
-        return product_data
+        return {'product_data': product_data, 'categories': categories}
 
     except GoogleAPICallError as e:
         raise HTTPException(status_code=500, detail=f"Gemini API error: {e.message}")
