@@ -26,7 +26,7 @@ async def create_checkout_session(promo_name:CheckoutRequest, payload: dict = De
         userid = payload["userid"]
         conn = get_db_connection()
         cur = conn.cursor()
-
+        
         # ✅ calculate cart total
         cur.execute("""
             SELECT SUM(a.qty * b.price)
@@ -46,6 +46,8 @@ async def create_checkout_session(promo_name:CheckoutRequest, payload: dict = De
             promo_value = promo[0] if promo else 0
             if total_amount >= int(promo_value):
                 total_amount -= promo_value
+
+
 
         # ✅ Create Stripe checkout session
         session = stripe.checkout.Session.create(
@@ -85,42 +87,42 @@ async def payment_success(session_id: str, userid: int):
         if not payment_intent or payment_intent.status != "succeeded":
             return RedirectResponse(url=f"{FRONTEND_URL}/payment-failed")
 
-        # conn = get_db_connection()
-        # cur = conn.cursor()
+        conn = get_db_connection()
+        cur = conn.cursor()
 
-        # # ✅ Get cartid
-        # cur.execute("SELECT cartid FROM cart WHERE userid = %s", (userid,))
-        # cart_row = cur.fetchone()
-        # if not cart_row:
-        #     return RedirectResponse(url=f"{FRONTEND_URL}/payment-failed")
+        # ✅ Get cartid
+        cur.execute("SELECT cartid FROM cart WHERE userid = %s", (userid,))
+        cart_row = cur.fetchone()
+        if not cart_row:
+            return RedirectResponse(url=f"{FRONTEND_URL}/payment-failed")
 
-        # cartid = cart_row[0]
+        cartid = cart_row[0]
 
-        # # ✅ Insert order
-        # cur.execute("""
-        #     INSERT INTO orders(userid, status, amount, razorpay_order_id)
-        #     VALUES (%s, %s, %s, %s)
-        #     RETURNING orderid
-        # """, (userid, "Pending", session.amount_total / 100, session.id))
-        # orderid = cur.fetchone()[0]
+        # ✅ Insert order
+        cur.execute("""
+            INSERT INTO orders(userid, status, amount, razorpay_order_id)
+            VALUES (%s, %s, %s, %s)
+            RETURNING orderid
+        """, (userid, "Pending", session.amount_total / 100, session.id))
+        orderid = cur.fetchone()[0]
 
-        # # ✅ Insert order items
-        # cur.execute("""
-        #     INSERT INTO orderitem (orderid, productid, qty, price)
-        #     SELECT %s, a.productid, a.qty, b.price
-        #     FROM cartitem a
-        #     JOIN product b ON a.productid = b.productid
-        #     WHERE cartid = %s
-        # """, (orderid, cartid))
+        # ✅ Insert order items
+        cur.execute("""
+            INSERT INTO orderitem (orderid, productid, qty, price)
+            SELECT %s, a.productid, a.qty, b.price
+            FROM cartitem a
+            JOIN product b ON a.productid = b.productid
+            WHERE cartid = %s
+        """, (orderid, cartid))
 
-        # # ✅ Clear cart
-        # cur.execute("DELETE FROM cart WHERE cartid = %s", (cartid,))
-        # conn.commit()
+        # ✅ Clear cart
+        cur.execute("DELETE FROM cart WHERE cartid = %s", (cartid,))
+        conn.commit()
 
-        # cur.close()
-        # conn.close()
+        cur.close()
+        conn.close()
 
-        # print(f"✅ Order {orderid} placed for user {userid}")
+        print(f"✅ Order {orderid} placed for user {userid}")
 
         return RedirectResponse(url=f"{FRONTEND_URL}/payment-success")
 
