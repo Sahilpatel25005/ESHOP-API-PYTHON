@@ -8,7 +8,6 @@ import uvicorn
 app = FastAPI(title="eShop API")
 
 
-
 # CORS Middleware
 origins = [
     "http://localhost:5173",

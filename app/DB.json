@@ -1,8 +1,8 @@
 
 {
-    "host": "localhost",
-    "dbname": "eshop",
-    "user": "postgres",
-    "password": "password",
+    "host": "dpg-d3ppm4qli9vc73bprcpg-a.oregon-postgres.render.com",
+    "dbname": "eshop_render",
+    "user": "p",
+    "password": "SzKrHr1cgrC72PPrRMxJC1ASGwmxPRIO",
     "port": 5432
 }
