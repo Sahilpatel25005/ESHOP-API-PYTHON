@@ -12,7 +12,7 @@ app = FastAPI(title="eShop API")
 # CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins. Change to specific domains in production!
+    allow_origins=["http://localhost:5173", "https://your-frontend.vercel.app"],  # Allows all origins. Change to specific domains in production!
     allow_credentials=True,
     allow_methods=["*"],  # Allows all HTTP methods (GET, POST, PUT, DELETE, etc.)
     allow_headers=["*"],  # Allows all headers
