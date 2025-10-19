@@ -68,10 +68,10 @@ def get_user_details(
             return {"error": "User not found"}
 
         user_data = {
-            "First name": user_result[1],
-            "Last name": user_result[2],
+            "FirstName": user_result[1],
+            "LastName": user_result[2],
             "Email": user_result[3],
-            "Mobile number": user_result[4],
+            "MobileNnumber": user_result[4],
             "Address": user_result[6]
         }
 
