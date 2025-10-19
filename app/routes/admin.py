@@ -58,9 +58,11 @@ def login_user(admin: AdminModel):
 
 admin_add_product = APIRouter(prefix='/admin_add_product', tags=['admin_add_product'])
 
+# Path to store uploaded product images
 UPLOAD_FOLDER = r"C:\REACT PROGRAM\ResponsiveEcommerce\public\products"
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
 
-@admin_add_product.post('/')
+@admin_add_product.post("/")
 async def add_product(
     name: str = Form(...),
     price: float = Form(...),
@@ -68,32 +70,43 @@ async def add_product(
     category: str = Form(...),
     image: UploadFile = None
 ):
+    conn = None
+    cur = None
     try:
+        # ✅ Validate file extension
+        image_filename = None
+        if image:
+            ext = image.filename.split(".")[-1].lower()
+            if ext not in ALLOWED_EXTENSIONS:
+                raise HTTPException(status_code=400, detail="Invalid image type")
+            
+            # ✅ Ensure upload folder exists
+            os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+            image_filename = image.filename
+            save_path = os.path.join(UPLOAD_FOLDER, image_filename)
+            
+            # ✅ Save file
+            with open(save_path, "wb") as buffer:
+                shutil.copyfileobj(image.file, buffer)
+
+        # ✅ Connect to DB
         conn = get_db_connection()
         cur = conn.cursor()
 
-        # ✅ Find category ID
+        # ✅ Get category ID
         cur.execute("SELECT categoryid FROM category WHERE name = %s", (category,))
         category_row = cur.fetchone()
         if not category_row:
             raise HTTPException(status_code=400, detail="Category not found")
         category_id = category_row[0]
 
-        # ✅ Save uploaded image
-        image_filename = None
-        if image:
-            image_filename = image.filename
-            save_path = os.path.join(UPLOAD_FOLDER, image_filename)
-            with open(save_path, "wb") as buffer:
-                shutil.copyfileobj(image.file, buffer)
-
-        # ✅ Insert product into database
+        # ✅ Insert product
         cur.execute("""
             INSERT INTO product (name, description, price, image, categoryid)
             VALUES (%s, %s, %s, %s, %s)
         """, (name, description, price, image_filename, category_id))
-
         conn.commit()
+
         return {"message": "✅ Product added successfully!"}
 
     except Exception as e:
@@ -101,9 +114,10 @@ async def add_product(
         return {"error": str(e)}
 
     finally:
-        cur.close()
-        conn.close()
-
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 
 @admin_router.get('/get_all_products')
 def get_all_products():
