@@ -10,16 +10,16 @@ app = FastAPI(title="eShop API")
 
 # CORS Middleware
 origins = [
-    "http://localhost:5173",
-    "https://eshop-one-iota.vercel.app",
+    "https://fresho-veggies.netlify.app",  # your frontend
+    "http://localhost:5173",                # for local dev
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,       # this must include your frontend URL
+    allow_origins=origins,  # or ["*"] for testing (not recommended in production)
     allow_credentials=True,
-    allow_methods=["*"],         # GET, POST, PUT, DELETE...
-    allow_headers=["*"],         # Accept all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 @app.middleware("http")
