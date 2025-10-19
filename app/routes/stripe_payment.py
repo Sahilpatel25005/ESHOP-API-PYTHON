@@ -13,7 +13,7 @@ load_dotenv()
 payment_router = APIRouter(prefix="/stripe_payment", tags=["stripe_payment"])
 
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://fresho-veggies.netlify.app")
 URL = os.getenv("URL")
 
 stripe.api_key = STRIPE_SECRET_KEY

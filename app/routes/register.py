@@ -4,6 +4,7 @@ from app.models.register import register
 from passlib.context import CryptContext
 from app.verify_token import current_user 
 import logging
+import psycopg2
 
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated = "auto")
@@ -11,31 +12,58 @@ pwd_context = CryptContext(schemes=['bcrypt'], deprecated = "auto")
 router = APIRouter( prefix="/register" , tags=['register'])
 
 @router.post('')
-def register_user(user : register):
+def register_user(user: register):
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        exist_user_query = ("select email from users where email = %s")
-        cur.execute(exist_user_query , (user.email,))
-        exist_user = cur.fetchone()
-        if exist_user:
-            return {"error" : "Email is already reagister."}
-        else:
-            password = user.password.strip()  # remove spaces/newlines
 
-            # bcrypt supports up to 72 bytes; normal 10-char passwords are fine
-            if len(password.encode("utf-8")) > 72:
-                password = password[:72]  # truncate only if user somehow sends huge input
-            hased_password = pwd_context.hash(password)
-            query = ("insert into users (fname, lname, email, monumber, password, address) values(%s , %s , %s , %s ,%s , %s)")
-            value = (user.fname , user.lname , user.email , user.monumber , hased_password , user.address,)
-            cur.execute(query , value)
-            conn.commit()
-            return {"massage" : "User Register Successfully"} 
+        # 1️⃣ Check if email exists
+        cur.execute("SELECT email FROM users WHERE email = %s", (user.email,))
+        if cur.fetchone():
+            return {"error": "Email is already registered."}
+
+        # 2️⃣ Check if mobile number exists
+        cur.execute("SELECT monumber FROM users WHERE monumber = %s", (user.monumber,))
+        if cur.fetchone():
+            return {"error": "Mobile number is already registered."}
+
+        # 3️⃣ Validate input lengths
+        if len(user.fname.strip()) > 50:
+            return {"error": "First name is too long (max 50 characters)."}
+        if len(user.lname.strip()) > 50:
+            return {"error": "Last name is too long (max 50 characters)."}
+        if len(user.email.strip()) > 100:
+            return {"error": "Email is too long (max 100 characters)."}
+        if len(user.password.strip()) > 72:
+            return {"error": "Password is too long (max 72 characters)."}
+        if len(user.address.strip()) > 200:
+            return {"error": "Address is too long (max 200 characters)."}
+
+        # 4️⃣ Hash password
+        password = user.password.strip()
+        hashed_password = pwd_context.hash(password)
+
+        # 5️⃣ Insert into DB
+        cur.execute(
+            """
+            INSERT INTO users (fname, lname, email, monumber, password, address)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """,
+            (user.fname.strip(), user.lname.strip(), user.email.strip(),
+             user.monumber.strip(), hashed_password, user.address.strip())
+        )
+        conn.commit()
+
+        return {"message": "✅ User registered successfully!"}
+
+    except psycopg2.Error as e:
+        logging.error(f"Database error: {e}")
+        return {"error": "Database error occurred. Please try again later."}
 
     except Exception as e:
-        logging.error(f"Error user login: {e}")
-        return {"error": "Failed to register user"}
+        logging.error(f"Unexpected error: {e}")
+        return {"error": f"Unexpected error: {str(e)}"}
+
     finally:
         cur.close()
         conn.close()
