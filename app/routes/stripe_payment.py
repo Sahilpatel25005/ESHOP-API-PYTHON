@@ -101,7 +101,7 @@ async def payment_success(session_id: str, userid: int):
 
         # ✅ Insert order
         cur.execute("""
-            INSERT INTO orders(userid, status, amount, razorpay_order_id)
+            INSERT INTO orders(userid, status, amount, stripe_id)
             VALUES (%s, %s, %s, %s)
             RETURNING orderid
         """, (userid, "Pending", session.amount_total / 100, session.id))
