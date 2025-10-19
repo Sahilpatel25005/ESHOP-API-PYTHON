@@ -59,8 +59,8 @@ def login_user(admin: AdminModel):
 admin_add_product = APIRouter(prefix='/admin_add_product', tags=['admin_add_product'])
 
 # Path to store uploaded product images
-UPLOAD_FOLDER = r"C:\REACT PROGRAM\ResponsiveEcommerce\public\products"
-ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
+# UPLOAD_FOLDER = r"C:\REACT PROGRAM\ResponsiveEcommerce\public\products"
+# ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
 
 @admin_add_product.post("/")
 async def add_product(
@@ -74,20 +74,20 @@ async def add_product(
     cur = None
     try:
         # ✅ Validate file extension
-        image_filename = None
-        if image:
-            ext = image.filename.split(".")[-1].lower()
-            if ext not in ALLOWED_EXTENSIONS:
-                raise HTTPException(status_code=400, detail="Invalid image type")
+        # image_filename = None
+        # if image:
+        #     ext = image.filename.split(".")[-1].lower()
+        #     if ext not in ALLOWED_EXTENSIONS:
+        #         raise HTTPException(status_code=400, detail="Invalid image type")
             
-            # ✅ Ensure upload folder exists
-            os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-            image_filename = image.filename
-            save_path = os.path.join(UPLOAD_FOLDER, image_filename)
+        #     # ✅ Ensure upload folder exists
+        #     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        #     image_filename = image.filename
+        #     save_path = os.path.join(UPLOAD_FOLDER, image_filename)
             
-            # ✅ Save file
-            with open(save_path, "wb") as buffer:
-                shutil.copyfileobj(image.file, buffer)
+        #     # ✅ Save file
+        #     with open(save_path, "wb") as buffer:
+        #         shutil.copyfileobj(image.file, buffer)
 
         # ✅ Connect to DB
         conn = get_db_connection()
@@ -104,7 +104,7 @@ async def add_product(
         cur.execute("""
             INSERT INTO product (name, description, price, image, categoryid)
             VALUES (%s, %s, %s, %s, %s)
-        """, (name, description, price, image_filename, category_id))
+        """, (name, description, price, image.filename, category_id))
         conn.commit()
 
         return {"message": "✅ Product added successfully!"}
