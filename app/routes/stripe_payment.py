@@ -62,13 +62,17 @@ async def create_checkout_session(promo_name:CheckoutRequest, payload: dict = De
                 },
                 "quantity": 1,
             }],
-            success_url=f"{FRONTEND_URL}/stripe_payment/payment-success?session_id={{CHECKOUT_SESSION_ID}}&userid={userid}",
+            success_url=f"https://eshop-one-iota.vercel.app/stripe_payment/payment-success?session_id={{CHECKOUT_SESSION_ID}}&userid={userid}",
             cancel_url=f"{FRONTEND_URL}/payment-failed",
         )
 
         cur.close()
         conn.close()
 
+        print("*" * 80)
+        print(FRONTEND_URL)
+        print("*" * 80)
+        
         return JSONResponse({"url": session.url})
 
     except Exception as e:
