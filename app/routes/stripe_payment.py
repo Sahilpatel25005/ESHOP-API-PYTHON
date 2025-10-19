@@ -14,6 +14,7 @@ payment_router = APIRouter(prefix="/stripe_payment", tags=["stripe_payment"])
 
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+URL = os.getenv("URL")
 
 stripe.api_key = STRIPE_SECRET_KEY
 
@@ -61,7 +62,7 @@ async def create_checkout_session(promo_name:CheckoutRequest, payload: dict = De
                 },
                 "quantity": 1,
             }],
-            success_url=f"http://127.0.0.1:8000/stripe_payment/payment-success?session_id={{CHECKOUT_SESSION_ID}}&userid={userid}",
+            success_url=f"{URL}stripe_payment/payment-success?session_id={{CHECKOUT_SESSION_ID}}&userid={userid}",
             cancel_url=f"{FRONTEND_URL}/payment-failed",
         )
 
