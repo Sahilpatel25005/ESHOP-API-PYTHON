@@ -21,7 +21,12 @@ def register_user(user : register):
         if exist_user:
             return {"error" : "Email is already reagister."}
         else:
-            hased_password = pwd_context.hash(user.password)
+            password = user.password.strip()  # remove spaces/newlines
+
+            # bcrypt supports up to 72 bytes; normal 10-char passwords are fine
+            if len(password.encode("utf-8")) > 72:
+                password = password[:72]  # truncate only if user somehow sends huge input
+            hased_password = pwd_context.hash(password)
             query = ("insert into users (fname, lname, email, monumber, password, address) values(%s , %s , %s , %s ,%s , %s)")
             value = (user.fname , user.lname , user.email , user.monumber , hased_password , user.address,)
             cur.execute(query , value)
