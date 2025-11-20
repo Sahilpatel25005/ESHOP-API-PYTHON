@@ -1,9 +1,9 @@
 
 
 {
-    "host": "dpg-d3ppm4qli9vc73bprcpg-a.oregon-postgres.render.com",
-    "dbname": "eshop_render",
-    "user": "p",
-    "password": "SzKrHr1cgrC72PPrRMxJC1ASGwmxPRIO",
+    "host": "dpg-d4fi2mshg0os7391a0vg-a.oregon-postgres.render.com",
+    "dbname": "eshop2",
+    "user": "eshop2_user",
+    "password": "Q9NAgPhAapXoO4u2NNF7ptPtRMKq2z4d",
     "port": 5432
 }
