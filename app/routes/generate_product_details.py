@@ -19,62 +19,62 @@ generate_product_details_router = APIRouter(prefix="", tags=["/generate-product"
 async def generate_product(image: UploadFile = File(...)):
     try:
         img_bytes = await image.read()
-        
-        # get product category from databse
+
+        # Get categories
         conn = get_db_connection()
         cur = conn.cursor()
-        query = "select name from category"
-        cur.execute(query)
+        cur.execute("SELECT name FROM category")
         categories_row = cur.fetchall()
+
         if not categories_row:
             raise HTTPException(status_code=500, detail="No categories found in database")
-          
-        categories = [row[0] for row in categories_row]  
 
-        response = model.generate_content([
-            f"""
-            You are an assistant that generates e-commerce product data.
+        categories = [row[0] for row in categories_row]
 
-            Task:
-            - Look at the given image.
-            - Generate:
-                1. A short, catchy product title.
-                2. A clear, engaging product description (2–3 sentences).
-                3. Select the most relevant product category from this list: {categories}.
-            - Return output strictly in JSON format only.
+        product_data = ""  # default fallback
 
-            Example:
-            {{
-            "title": "Trendy Black Aviator Sunglasses",
-            "description": "Sleek and stylish aviators with UV protection, lightweight frame, and a modern edge.",
-            "category": "Sunglasses"
-            }}
-            """,
-            {"mime_type": image.content_type, "data": img_bytes}
-        ])
-
-
-        raw_text = response.text.strip()
-
-        # 🔹 Extract JSON using regex (in case Gemini adds extra text)
-        match = re.search(r"\{.*\}", raw_text, re.DOTALL)
-        if not match:
-            raise HTTPException(status_code=500, detail="No valid JSON found in Gemini response")
-
-        json_text = match.group(0)
-
+        # --- Try Gemini AI ---
         try:
-            product_data = json.loads(json_text)
-        except json.JSONDecodeError:
-            raise HTTPException(status_code=500, detail="Gemini returned malformed JSON")
+            response = model.generate_content([
+                f"""
+                You are an assistant that generates e-commerce product data.
 
-        return {'product_data': product_data, 'categories': categories}
+                Task:
+                - Look at the given image.
+                - Generate:
+                    1. A short product title.
+                    2. A 2–3 sentence product description.
+                    3. Select the most relevant category from: {categories}.
+                - Return only JSON.
+                """,
+                {"mime_type": image.content_type, "data": img_bytes}
+            ])
 
-    except GoogleAPICallError as e:
-        raise HTTPException(status_code=500, detail=f"Gemini API error: {e.message}")
+            raw_text = response.text.strip()
+
+            # Extract JSON
+            match = re.search(r"\{.*\}", raw_text, re.DOTALL)
+            if match:
+                json_text = match.group(0)
+                product_data = json.loads(json_text)
+            else:
+                product_data = ""  # fallback if JSON not found
+
+        except Exception as gemini_error:
+            # ❗ Don’t raise error — still return categories
+            product_data = ""
+
+        # FINAL MANDATORY RESPONSE
+        return {
+            "product_data": product_data if product_data else "",
+            "categories": categories
+        }
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+
     finally:
-      cur.close()
-      conn.close()
+        cur.close()
+        conn.close()
+
     
