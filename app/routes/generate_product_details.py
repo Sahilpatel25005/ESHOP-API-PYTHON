@@ -76,5 +76,3 @@ async def generate_product(image: UploadFile = File(...)):
     finally:
         cur.close()
         conn.close()
-
-    

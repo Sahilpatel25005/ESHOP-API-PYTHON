@@ -1,13 +1,11 @@
 from fastapi import HTTPException,APIRouter,Form,UploadFile
 from passlib.context import CryptContext
 from app.database import get_db_connection
-from app.models.admin_model import AdminModel,admin_insert_product
-from app.verify_token import current_user
+from app.models.admin_model import AdminModel
 import logging
 import jwt
 from datetime import datetime, timezone, timedelta
-import os
-import shutil
+
 
 
 # JWT Config
