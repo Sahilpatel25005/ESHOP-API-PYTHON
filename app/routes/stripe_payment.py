@@ -81,7 +81,7 @@ async def create_checkout_session(
                 }
             ],
             success_url=(
-                "http://127.0.0.1:8000/stripe_payment/payment-success"
+                "https://eshop-one-iota.vercel.app/stripe_payment/payment-success"
                 f"?session_id={{CHECKOUT_SESSION_ID}}&userid={userid}"
             ),
             cancel_url=f"{FRONTEND_URL}/payment-failed",
