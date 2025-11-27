@@ -3,3 +3,4 @@
 DB.json
 
 *_pycache_*/
+*.pyc
