@@ -119,7 +119,7 @@ def product(payload: str = Depends(current_user)):
                     OrderItem oi ON o.OrderId = oi.OrderId
                 JOIN
                     Product p ON oi.ProductId = p.ProductId
-                where o.UserId = %s and o.Status IN ('Pending', 'Shipped')
+                where o.UserId = %s and o.Status IN ('Pending', 'Packaging', 'Shipped')
                 GROUP BY
                     o.OrderId, o.UserId, o.OrderDate, o.Status, o.Amount
                 order by

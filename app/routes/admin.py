@@ -1,9 +1,10 @@
 from fastapi import HTTPException,APIRouter,Form,UploadFile
 from passlib.context import CryptContext
 from app.database import get_db_connection
-from app.models.admin_model import AdminModel
+from app.models.admin_model import AdminModel, UpdateStatusRequest
 import logging
 import jwt
+from app.Logger_config import logger
 from datetime import datetime, timezone, timedelta
 
 
@@ -156,3 +157,81 @@ def delete_product(productid: int):
         return {"message": "Product deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+# API Endpoints
+@admin_router.get('/get_all_orders')
+def product():
+    try:   
+        conn = get_db_connection()
+        cur = conn.cursor()
+        logger.info("Fetching all product data.")
+        query = ("""
+                    SELECT
+                        o.OrderId,
+                        o.OrderDate,
+                        o.Status,
+                        o.Amount,
+                        ARRAY_AGG(p.Name) AS ProductNames
+                    FROM
+                        Orders o
+                    JOIN
+                        OrderItem oi ON o.OrderId = oi.OrderId
+                    JOIN
+                        Product p ON oi.ProductId = p.ProductId
+                    GROUP BY
+                        o.OrderId, o.UserId, o.OrderDate, o.Status, o.Amount
+                    ORDER BY
+                        o.OrderDate DESC
+                """)
+
+        cur.execute(query)
+        rows = cur.fetchall()
+        result = []
+        for item in rows:
+            result.append({"orderid" : item[0] , "orderdate" : item[1] , "status" : item[2] ,  "amount" : item[3] , "productname" : item[4]  })
+            
+        # If the order is not i, raise an error
+        if not rows:
+            return {"error": "order is not found"}
+            # raise HTTPException(status_code=404, detail="order not found")
+        return {
+          "massage" : "order is get successfully.",
+          "cartitem" : result
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching order: {e}")
+        return {"error": "Failed to get order"}
+    finally:
+        cur.close()
+        conn.close()
+
+
+@admin_router.put('/update_order_status')
+def update_order_status(req: UpdateStatusRequest):
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        print('hy')
+        logger.info(f"Updating order {req.orderid} status to {req.status}")
+        query = """
+            UPDATE Orders
+            SET Status = %s
+            WHERE OrderId = %s
+        """
+        cur.execute(query, (req.status, req.orderid))
+        conn.commit()
+        if cur.rowcount == 0:
+            raise HTTPException(status_code=404, detail='Order not found')
+        return {"message": "Order status updated successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating order status: {e}")
+        raise HTTPException(status_code=500, detail='Failed to update order status')
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()

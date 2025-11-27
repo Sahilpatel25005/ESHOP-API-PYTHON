@@ -27,3 +27,7 @@ class admin_insert_product(BaseModel):
     description:str
     image:str
     category:str
+
+class UpdateStatusRequest(BaseModel):
+    orderid: int
+    status: str
