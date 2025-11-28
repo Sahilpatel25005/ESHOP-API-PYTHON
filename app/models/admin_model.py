@@ -1,5 +1,6 @@
 
 from pydantic import BaseModel, EmailStr, field_validator
+from typing import Optional
     
 class AdminModel(BaseModel):
     email: EmailStr
@@ -31,3 +32,9 @@ class admin_insert_product(BaseModel):
 class UpdateStatusRequest(BaseModel):
     orderid: int
     status: str
+    
+class ProductUpdate(BaseModel):
+    name: str
+    description: Optional[str] = ""
+    price: float
+    categoryname: Optional[str] = ""

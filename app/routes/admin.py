@@ -1,7 +1,7 @@
 from fastapi import HTTPException,APIRouter,Form,UploadFile
 from passlib.context import CryptContext
 from app.database import get_db_connection
-from app.models.admin_model import AdminModel, UpdateStatusRequest
+from app.models.admin_model import AdminModel, UpdateStatusRequest, ProductUpdate
 import logging
 import jwt
 from app.Logger_config import logger
@@ -123,6 +123,15 @@ def get_all_products():
     try:
         conn = get_db_connection()
         cur = conn.cursor()
+        
+        cur.execute("SELECT name FROM category")
+        categories_row = cur.fetchall()
+
+        if not categories_row:
+            raise HTTPException(status_code=500, detail="No categories found in database")
+
+        categories = [row[0] for row in categories_row]
+        
         cur.execute("""
             SELECT p.productid, p.name, p.description, p.price, p.image, 
                    p.categoryid, c.name AS categoryname 
@@ -135,8 +144,74 @@ def get_all_products():
         products = [dict(zip(columns, row)) for row in rows]
         cur.close()
         conn.close()
-        return {"products": products}
+        return {"categories" : categories,"products": products}
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+@admin_router.put("/update_product/{productid}")
+def update_product(productid: int, payload: ProductUpdate):
+    """
+    Updates: name, description, price, categoryid (resolved from categoryname).
+    Does NOT update image.
+
+    Expects payload.categoryname to be a valid category name existing in `category` table.
+    """
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        # 1) Resolve categoryname -> categoryid
+        if not payload.categoryname:
+            raise HTTPException(status_code=400, detail="categoryname is required")
+
+        cur.execute("SELECT categoryid, name FROM category WHERE name = %s", (payload.categoryname,))
+        cat_row = cur.fetchone()
+        if not cat_row:
+            # Category not found — return a clear error so frontend can show a message
+            raise HTTPException(status_code=400, detail=f"Category '{payload.categoryname}' not found")
+
+        categoryid = cat_row["categoryid"]
+
+        # 2) Update the product (set categoryid, not categoryname)
+        cur.execute(
+            """
+            UPDATE product
+            SET name = %s,
+                description = %s,
+                price = %s,
+                categoryid = %s
+            WHERE productid = %s
+            RETURNING productid, name, description, price, image, categoryid
+            """,
+            (payload.name, payload.description, payload.price, categoryid, productid),
+        )
+
+        updated = cur.fetchone()
+        conn.commit()
+        cur.close()
+
+        if not updated:
+            raise HTTPException(status_code=404, detail="Product not found")
+
+        # Build response: include categoryname as well for convenience
+        resp = {
+            "productid": updated["productid"],
+            "name": updated["name"],
+            "description": updated["description"],
+            "price": float(updated["price"]),
+            "image": updated["image"],
+            "categoryid": updated["categoryid"],
+            "categoryname": payload.categoryname,  # we resolved this earlier
+        }
+        return {"message": "Product updated", "product": resp}
+
+    except HTTPException:
+        # Re-raise known HTTP exceptions
+        raise
+    except Exception as e:
+        # Log the error if you have logging; return 500 otherwise
         raise HTTPException(status_code=500, detail=str(e))
     
     

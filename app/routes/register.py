@@ -87,6 +87,18 @@ def get_user_details(
         userid = payload['userid']
         conn = get_db_connection()
         cur = conn.cursor()
+        
+        cur.execute(
+            """
+            SELECT SUM(a.qty * b.price)
+            FROM cartitem a
+            JOIN product b ON a.productid = b.productid
+            JOIN cart c ON a.cartid = c.cartid
+            WHERE c.userid = %s;
+            """,
+            (userid,),
+        )
+        total_amount = cur.fetchone()[0] or 0
 
         # ✅ Fetch user details
         cur.execute("SELECT * FROM users WHERE userid = %s", (userid,))
@@ -115,7 +127,7 @@ def get_user_details(
                 user_data["promocode_name"] = promocode_name
                 user_data["promocode_value"] = "Invalid promo code"
 
-        return {"user_detail": user_data}
+        return {"total_amount": total_amount, "user_detail": user_data}
 
     except Exception as e:
         logging.error(f"Error in user detail: {e}")
